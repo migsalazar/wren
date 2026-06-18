@@ -16,7 +16,6 @@ From an Obsidian vault or another Markdown workspace:
 
 ```bash
 wren init
-wren doctor
 ```
 
 `wren init` creates the local Wren scaffold without overwriting existing files:
@@ -54,12 +53,14 @@ printf '## Summary\n\nWe clarified the Wren capture workflow.\n' \
   | wren capture --title "Wren capture workflow" --tag wren --stdin
 ```
 
-Check deterministic health at any time:
+Check deterministic health when needed:
 
 ```bash
 wren doctor
 wren lint
 ```
+
+`wren doctor` may warn that the configured capture directory is missing until the first capture is created.
 
 For local development in this repository:
 
