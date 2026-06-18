@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "areas": {
+    "capture": {
+      "path": "capture"
+    },
+    "wiki": {
+      "default": {
+        "path": "wiki"
+      }
+    }
+  },
+  "defaultWiki": "default"
+}

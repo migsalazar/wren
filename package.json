@@ -1,0 +1,40 @@
+{
+  "name": "wren-cli",
+  "version": "0.1.0",
+  "description": "CLI helpers for the Wren reflection protocol.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/msalazar/wren.git"
+  },
+  "keywords": [
+    "wren",
+    "obsidian",
+    "markdown",
+    "reflection",
+    "notes",
+    "cli"
+  ],
+  "bin": {
+    "wren": "dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "test": "npm run build && node --test dist/**/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.0.0"
+  }
+}

@@ -1,0 +1,3 @@
+# Wren Index
+
+- [[log]]
