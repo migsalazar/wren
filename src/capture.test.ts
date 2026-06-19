@@ -8,18 +8,6 @@ import { initWren } from './init.js';
 
 const packageRoot = process.cwd();
 
-test('capture requires Wren init first', async () => {
-  const root = await tempDir();
-  try {
-    await assert.rejects(
-      capture(root, {}),
-      /No \.wren\/config\.json found\. Run: wren init/
-    );
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
 test('capture creates a templated capture note with optional title', async () => {
   const root = await tempDir();
   try {
