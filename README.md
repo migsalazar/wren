@@ -10,6 +10,16 @@ The goal is not to build a general wiki or an opaque memory store. The goal is t
 
 > What remains after experience and noise.
 
+## Install from Source
+
+```bash
+git clone https://github.com/migsalazar/wren.git
+cd wren
+npm install
+npm run build
+npm link
+```
+
 ## Quickstart
 
 From an Obsidian vault or another Markdown workspace:
@@ -65,7 +75,6 @@ wren lint
 For local development in this repository:
 
 ```bash
-npm install
 npm run build
 node dist/cli.js --help
 npm test
