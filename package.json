@@ -21,6 +21,8 @@
   },
   "files": [
     "dist/",
+    "!dist/**/*.test.js",
+    "!dist/**/*.test.d.ts",
     "templates/",
     "README.md",
     "LICENSE"
