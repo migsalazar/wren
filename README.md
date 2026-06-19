@@ -205,8 +205,6 @@ wiki/index.md
 wiki/log.md
 ```
 
-See [docs/mvp.md](docs/mvp.md) for detailed MVP scope, current CLI helpers, near-term tooling, and non-goals.
-
 ## Design Principle
 
 Build trust before automation.
