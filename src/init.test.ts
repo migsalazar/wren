@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { formatInitResult, initWren } from './init.js';
@@ -26,8 +26,39 @@ test('initWren creates scaffold files without creating capture folder', async ()
       'wiki/log.md'
     ].sort());
 
-    assert.match(await readFile(path.join(root, '.wren/config.json'), 'utf8'), /"areas"/);
+    const config = JSON.parse(await readFile(path.join(root, '.wren/config.json'), 'utf8')) as {
+      sources: Array<{ path: string }>;
+    };
+
+    assert.deepEqual(result.configuredSources, ['capture']);
+    assert.deepEqual(config.sources, [{ path: 'capture' }]);
     await assert.rejects(readFile(path.join(root, 'capture'), 'utf8'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('initWren detects top-level Markdown source folders', async () => {
+  const root = await tempDir();
+  try {
+    await mkdir(path.join(root, 'notes'), { recursive: true });
+    await mkdir(path.join(root, 'assets'), { recursive: true });
+    await mkdir(path.join(root, 'wiki'), { recursive: true });
+    await mkdir(path.join(root, '.obsidian'), { recursive: true });
+    await mkdir(path.join(root, 'node_modules', 'package'), { recursive: true });
+    await writeFile(path.join(root, 'notes', 'important.md'), '# Important\n', 'utf8');
+    await writeFile(path.join(root, 'assets', 'image.png'), 'not markdown', 'utf8');
+    await writeFile(path.join(root, 'wiki', 'existing.md'), '# Existing wiki\n', 'utf8');
+    await writeFile(path.join(root, '.obsidian', 'hidden.md'), '# Hidden\n', 'utf8');
+    await writeFile(path.join(root, 'node_modules', 'package', 'README.md'), '# Dependency\n', 'utf8');
+
+    const result = await initWren(root, packageRoot);
+    const config = JSON.parse(await readFile(path.join(root, '.wren/config.json'), 'utf8')) as {
+      sources: Array<{ path: string }>;
+    };
+
+    assert.deepEqual(result.configuredSources, ['capture', 'notes']);
+    assert.deepEqual(config.sources, [{ path: 'capture' }, { path: 'notes' }]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -48,13 +79,21 @@ test('initWren skips existing files without overwriting them', async () => {
   }
 });
 
-test('formatInitResult shows created and skipped files', () => {
-  const output = formatInitResult({ created: ['.wren/config.json'], skipped: ['AGENTS.md'] });
+test('formatInitResult shows created, skipped, and configured source files', () => {
+  const output = formatInitResult({
+    created: ['.wren/config.json'],
+    skipped: ['AGENTS.md'],
+    configuredSources: ['capture', 'notes']
+  });
 
   assert.match(output, /Created:/);
   assert.match(output, /\.wren\/config\.json/);
   assert.match(output, /Skipped existing files:/);
   assert.match(output, /AGENTS\.md/);
+  assert.match(output, /Configured source folders:/);
+  assert.match(output, /capture/);
+  assert.match(output, /notes/);
+  assert.match(output, /Review them in \.wren\/config\.json/);
 });
 
 async function tempDir(): Promise<string> {

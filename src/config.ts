@@ -1,5 +1,10 @@
 import path from 'node:path';
 import { readText } from './files.js';
+import { isHiddenOrSystemPath, pathsOverlap } from './sources.js';
+
+export interface SourceArea {
+  path: string;
+}
 
 export interface WrenConfig {
   version: number;
@@ -9,6 +14,7 @@ export interface WrenConfig {
     };
     wiki: Record<string, { path: string }>;
   };
+  sources: SourceArea[];
   defaultWiki: string;
 }
 
@@ -62,6 +68,7 @@ function validateConfig(value: unknown): WrenConfig {
   }
 
   validateAreaBoundaries(capturePath, wikiPaths);
+  const sources = validateSources(value.sources, capturePath, wikiPaths);
 
   return {
     version: 1,
@@ -69,6 +76,7 @@ function validateConfig(value: unknown): WrenConfig {
       capture: { path: capturePath },
       wiki: wikiAreas
     },
+    sources,
     defaultWiki
   };
 }
@@ -99,8 +107,37 @@ function validateAreaBoundaries(capturePath: string, wikiPaths: Map<string, stri
   }
 }
 
-function pathsOverlap(first: string, second: string): boolean {
-  return first === second || first.startsWith(`${second}/`) || second.startsWith(`${first}/`);
+function validateSources(value: unknown, capturePath: string, wikiPaths: Map<string, string>): SourceArea[] {
+  if (value === undefined) return [{ path: capturePath }];
+  if (!Array.isArray(value)) throw new Error(`${CONFIG_PATH} sources must be an array.`);
+  if (value.length === 0) throw new Error(`${CONFIG_PATH} sources must not be empty.`);
+
+  const sources: SourceArea[] = [];
+  const seen = new Set<string>();
+
+  for (const [index, source] of value.entries()) {
+    if (!isRecord(source)) throw new Error(`${CONFIG_PATH} sources[${index}] must be a JSON object.`);
+    if (typeof source.path !== 'string' || source.path.length === 0) {
+      throw new Error(`${CONFIG_PATH} must define sources[${index}].path.`);
+    }
+
+    const sourcePath = validateRelativePath(source.path, `sources[${index}].path`);
+    if (isHiddenOrSystemPath(sourcePath)) {
+      throw new Error(`${CONFIG_PATH} sources[${index}].path must not point to a hidden or system folder.`);
+    }
+
+    for (const [name, wikiPath] of wikiPaths) {
+      if (pathsOverlap(sourcePath, wikiPath)) {
+        throw new Error(`${CONFIG_PATH} sources[${index}].path must not overlap areas.wiki.${name}.path.`);
+      }
+    }
+
+    if (seen.has(sourcePath)) throw new Error(`${CONFIG_PATH} sources must not contain duplicate paths: ${sourcePath}.`);
+    seen.add(sourcePath);
+    sources.push({ path: sourcePath });
+  }
+
+  return sources;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

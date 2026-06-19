@@ -34,6 +34,7 @@ test('loadConfig parses valid config', async () => {
         capture: { path: 'capture' },
         wiki: { default: { path: 'wiki' } }
       },
+      sources: [{ path: 'capture' }, { path: 'notes' }],
       defaultWiki: 'default'
     });
 
@@ -42,6 +43,7 @@ test('loadConfig parses valid config', async () => {
     assert.equal(config.version, 1);
     assert.equal(config.areas.capture.path, 'capture');
     assert.equal(config.areas.wiki.default.path, 'wiki');
+    assert.deepEqual(config.sources, [{ path: 'capture' }, { path: 'notes' }]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -132,6 +134,83 @@ test('loadConfig rejects empty path segments', async () => {
     });
 
     await assert.rejects(loadConfig(root), /areas\.capture\.path must not contain empty path segments/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig defaults missing sources to the capture path', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        capture: { path: 'capture' },
+        wiki: { default: { path: 'wiki' } }
+      },
+      defaultWiki: 'default'
+    });
+
+    const config = await loadConfig(root);
+
+    assert.deepEqual(config.sources, [{ path: 'capture' }]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects source paths that overlap wiki paths', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        capture: { path: 'capture' },
+        wiki: { default: { path: 'wiki' } }
+      },
+      sources: [{ path: 'wiki' }],
+      defaultWiki: 'default'
+    });
+
+    await assert.rejects(loadConfig(root), /sources\[0\]\.path must not overlap areas\.wiki\.default\.path/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects hidden source paths', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        capture: { path: 'capture' },
+        wiki: { default: { path: 'wiki' } }
+      },
+      sources: [{ path: '.obsidian' }],
+      defaultWiki: 'default'
+    });
+
+    await assert.rejects(loadConfig(root), /sources\[0\]\.path must not point to a hidden or system folder/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects duplicate source paths', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        capture: { path: 'capture' },
+        wiki: { default: { path: 'wiki' } }
+      },
+      sources: [{ path: 'notes' }, { path: 'notes' }],
+      defaultWiki: 'default'
+    });
+
+    await assert.rejects(loadConfig(root), /sources must not contain duplicate paths: notes/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

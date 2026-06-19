@@ -17,8 +17,8 @@ wiki/*.md
 
 ## Minimum Behavior
 
-- Define the capture area and writable wiki workspaces.
-- Read configured Wren areas as evidence.
+- Define the capture area, configured source folders, and writable wiki workspaces.
+- Read configured source folders as evidence.
 - Write capture notes only to the configured capture area.
 - Write generated synthesis only to configured wiki workspaces.
 - Keep `wiki/index.md` useful.
@@ -29,10 +29,10 @@ wiki/*.md
 
 ## Current CLI Helpers
 
-- `wren init` scaffolds local Wren files without overwriting existing files.
-- `wren doctor` checks the scaffold and configured paths.
+- `wren init` scaffolds local Wren files without overwriting existing files and configures detected source folders.
+- `wren doctor` checks the scaffold, configured paths, and unconfigured source-folder candidates.
 - `wren capture --stdin` creates a capture note from provided content.
-- `wren lint` checks configured Wren areas for deterministic content issues.
+- `wren lint` checks configured capture/wiki areas for deterministic content issues.
 
 ## Near-Term Tooling
 

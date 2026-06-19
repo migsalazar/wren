@@ -1,6 +1,8 @@
+import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { CONFIG_PATH, WrenConfig, loadConfig } from './config.js';
 import { pathExists } from './files.js';
+import { discoverTopLevelSourceFolders } from './sources.js';
 
 export type DoctorStatus = 'ok' | 'warn' | 'error';
 
@@ -52,6 +54,8 @@ export async function runDoctor(rootDir: string): Promise<DoctorReport> {
   await checkPath(checks, rootDir, path.join('.wren', 'templates', 'capture.md'), 'capture template', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'templates', 'wiki.md'), 'wiki template', 'error');
   await checkPath(checks, rootDir, config.areas.capture.path, 'capture directory', 'warn');
+  await checkSourceFolders(checks, rootDir, config);
+  await checkUnconfiguredSourceFolders(checks, rootDir, config);
   await checkPath(checks, rootDir, 'AGENTS.md', 'agent instructions', 'warn');
 
   return summarize(checks);
@@ -76,6 +80,40 @@ function summarize(checks: DoctorCheck[]): DoctorReport {
     errors: checks.filter((check) => check.status === 'error').length,
     warnings: checks.filter((check) => check.status === 'warn').length
   };
+}
+
+async function checkSourceFolders(checks: DoctorCheck[], rootDir: string, config: WrenConfig): Promise<void> {
+  for (const source of config.sources) {
+    checks.push(ok(`source configured: ${source.path}`));
+
+    const absolutePath = path.join(rootDir, source.path);
+    if (!(await pathExists(absolutePath))) {
+      if (source.path !== config.areas.capture.path) checks.push(warn(`source directory missing: ${source.path}`));
+      continue;
+    }
+
+    if (!(await stat(absolutePath)).isDirectory()) {
+      checks.push(warn(`source path is not a directory: ${source.path}`));
+      continue;
+    }
+
+    checks.push(ok(`source directory exists: ${source.path}`));
+  }
+}
+
+async function checkUnconfiguredSourceFolders(
+  checks: DoctorCheck[],
+  rootDir: string,
+  config: WrenConfig
+): Promise<void> {
+  const wikiPaths = Object.values(config.areas.wiki).map((area) => area.path);
+  const configuredSources = new Set(config.sources.map((source) => source.path));
+  const candidates = await discoverTopLevelSourceFolders(rootDir, wikiPaths);
+
+  for (const candidate of candidates) {
+    if (configuredSources.has(candidate)) continue;
+    checks.push(warn(`source folder not configured: ${candidate} (review sources in ${CONFIG_PATH})`));
+  }
 }
 
 async function checkPath(

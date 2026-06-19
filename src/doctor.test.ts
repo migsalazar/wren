@@ -58,6 +58,28 @@ test('runDoctor passes without warnings when capture exists', async () => {
   }
 });
 
+test('runDoctor warns about Markdown folders missing from sources', async () => {
+  const root = await tempDir();
+  try {
+    await initWren(root, packageRoot);
+    await mkdir(path.join(root, 'capture'));
+    await mkdir(path.join(root, 'notes'));
+    await writeFile(path.join(root, 'notes', 'important.md'), '# Important\n', 'utf8');
+
+    const report = await runDoctor(root);
+
+    assert.equal(report.errors, 0);
+    assert.equal(report.warnings, 1);
+    assert.ok(
+      report.checks.some(
+        (check) => check.message === 'source folder not configured: notes (review sources in .wren/config.json)'
+      )
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('runDoctor reports missing wiki files as errors', async () => {
   const root = await tempDir();
   try {

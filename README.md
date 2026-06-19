@@ -40,6 +40,8 @@ wiki/index.md
 wiki/log.md
 ```
 
+When creating `.wren/config.json`, `wren init` detects top-level Markdown folders and lists them as `sources`. It always includes the capture path as a source, and it skips wiki, hidden, and system folders. Review the generated `sources` list in `.wren/config.json` and remove anything Wren should not use as evidence.
+
 Use Wren through local agent workflows:
 
 ```text
@@ -56,6 +58,15 @@ A typical capture flow is:
 3. Review the proposed capture note.
 4. Approve the write to the configured capture area.
 
+A typical reflection flow for existing notes is:
+
+1. Review `.wren/config.json` and confirm the relevant folders are listed in `sources`.
+2. Invoke `/wren reflect`.
+3. Review the proposed wiki updates and source links.
+4. Approve the write to the configured wiki workspace.
+
+Wren does not automatically synthesize notes. Use `/wren reflect` to introduce configured source notes into Wren's wiki synthesis.
+
 The CLI can also create a capture from stdin:
 
 ```bash
@@ -70,7 +81,7 @@ wren doctor
 wren lint
 ```
 
-`wren doctor` may warn that the configured capture directory is missing until the first capture is created.
+`wren doctor` may warn that the configured capture directory is missing until the first capture is created. It also warns when top-level Markdown folders outside wiki, hidden, and system folders are not listed in `sources`.
 
 For local development in this repository:
 
@@ -86,15 +97,17 @@ Wren treats Markdown as durable memory.
 
 The LLM can help search, summarize, synthesize, question, and maintain knowledge, but the durable artifacts remain plain files in the vault. The LLM is a maintainer and reflection assistant, not the source of truth.
 
-Wren separates three kinds of files:
+Wren separates three roles:
 
 ```text
-capture area -> written as source-level memory
-wiki workspace -> written as reviewed synthesis
-other vault files -> untouched unless explicitly allowed
+configured source folders -> source evidence
+wiki workspace            -> Wren-maintained synthesis/output
+.wren/                    -> protocol, config, and templates
 ```
 
-Wren only operates in folders it knows through `.wren/config.json`. By default, that means the configured capture area and wiki workspace. Other vault folders remain the user's responsibility unless explicitly configured or provided for a task.
+Capture notes are not the privileged source of truth. They are ordinary source notes when the capture path is listed in `sources`; Wren also happens to create captures there.
+
+During recall and reflection, Wren reads from configured `sources` and from files or folders the user explicitly provides for the current task. Writes remain constrained: `/wren capture` writes only to the configured capture area, and `/wren reflect` writes only to configured wiki workspaces after approval.
 
 ## Local Protocol Files
 
@@ -128,31 +141,31 @@ Templates are intentionally local and editable. For example, the default capture
 
 Summarize the current agent discussion into a source-level capture note.
 
-Capture is not wiki synthesis. It preserves what happened, including summary, assumptions, disagreements or tensions, conversation metadata, and Markdown tags. It writes only to the configured capture area after user approval.
+Capture is not wiki synthesis. It preserves what happened, including summary, assumptions, disagreements or tensions, and Markdown tags. It writes only to the configured capture area after user approval.
 
 ### `/wren recall`
 
 Recover relevant context and relate it to the current discussion.
 
-Recall searches the wiki first, then reads configured capture notes or explicitly provided evidence only when needed. The goal is useful context and connections, not plain keyword search.
+Recall searches the wiki first, then reads configured source notes only when needed. The goal is useful context and connections, not plain keyword search.
 
 ### `/wren reflect`
 
-Turn capture notes or explicitly provided evidence into wiki synthesis.
+Turn configured source notes into wiki synthesis.
 
-Reflect updates configured wiki workspaces with traceable synthesis. Generated wiki pages require `## Sources`; meaningful activity should be appended to `wiki/log.md`.
+Use reflect to introduce existing notes into Wren's wiki. Source evidence can include normal vault notes and capture notes when those folders are listed in `sources`. Reflect updates configured wiki workspaces with traceable synthesis. Generated wiki pages require `## Sources`; meaningful activity should be appended to `wiki/log.md`.
 
 ### `/wren lint`
 
 Check Wren workspace health without silently rewriting notes.
 
-The `wren lint` CLI currently checks configured Wren areas for:
+The `wren lint` CLI currently checks configured capture/wiki areas for:
 
 - wiki pages without `## Sources`, except `index.md` and `log.md`,
 - wiki pages missing from the wiki index,
 - empty capture notes,
 - empty wiki pages,
-- broken relative Markdown links within configured Wren areas,
+- broken relative Markdown links within configured capture/wiki areas,
 - broken simple wikilinks by filename or title match.
 
 ## CLI Helpers

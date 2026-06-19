@@ -11,8 +11,9 @@ Lint is primarily read-only unless the user explicitly approves a fix.
 ## Rules
 
 - Read `.wren/config.json` before linting.
-- Inspect configured Wren areas by default.
-- Do not inspect outside configured Wren areas unless the user explicitly provides additional files or paths for the current task.
+- Inspect configured capture and wiki areas by default.
+- Inspect configured source folders only when a check explicitly covers sources or the user asks.
+- Do not inspect outside configured Wren areas or configured sources unless the user explicitly provides additional files or paths for the current task.
 - Do not silently rewrite notes.
 - Do not modify non-Wren notes except through explicit, deterministic, approved fixes.
 - Prefer reports and proposals over automatic changes.

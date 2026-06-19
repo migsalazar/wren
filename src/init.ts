@@ -1,13 +1,19 @@
 import path from 'node:path';
+import { CONFIG_PATH } from './config.js';
 import { readText, writeNewText } from './files.js';
+import { discoverTopLevelSourceFolders, uniquePaths } from './sources.js';
 
 interface InitResult {
   created: string[];
   skipped: string[];
+  configuredSources?: string[];
 }
 
+const DEFAULT_CAPTURE_PATH = 'capture';
+const DEFAULT_WIKI_NAME = 'default';
+const DEFAULT_WIKI_PATH = 'wiki';
+
 const TEMPLATE_FILES = [
-  { from: path.join('templates', '.wren', 'config.json'), to: path.join('.wren', 'config.json') },
   { from: path.join('templates', '.wren', 'workflows', 'capture.md'), to: path.join('.wren', 'workflows', 'capture.md') },
   { from: path.join('templates', '.wren', 'workflows', 'recall.md'), to: path.join('.wren', 'workflows', 'recall.md') },
   { from: path.join('templates', '.wren', 'workflows', 'reflect.md'), to: path.join('.wren', 'workflows', 'reflect.md') },
@@ -21,6 +27,11 @@ const TEMPLATE_FILES = [
 
 export async function initWren(rootDir: string, packageRoot: string): Promise<InitResult> {
   const result: InitResult = { created: [], skipped: [] };
+  const config = await buildInitialConfig(rootDir);
+  const configStatus = await writeNewText(path.join(rootDir, CONFIG_PATH), config.content);
+
+  result[configStatus].push(CONFIG_PATH);
+  if (configStatus === 'created') result.configuredSources = config.sources;
 
   for (const file of TEMPLATE_FILES) {
     const content = await readText(path.join(packageRoot, file.from));
@@ -46,9 +57,32 @@ export function formatInitResult(result: InitResult): string {
     lines.push('');
   }
 
+  if (result.configuredSources && result.configuredSources.length > 0) {
+    lines.push('Configured source folders:');
+    for (const source of result.configuredSources) lines.push(`  ${source}`);
+    lines.push(`Review them in ${CONFIG_PATH}.`);
+    lines.push('');
+  }
+
   lines.push('Next:');
   lines.push('  Use /wren capture with an agent in this vault');
   lines.push('  wren doctor');
 
   return lines.join('\n');
+}
+
+async function buildInitialConfig(rootDir: string): Promise<{ content: string; sources: string[] }> {
+  const discoveredSources = await discoverTopLevelSourceFolders(rootDir, [DEFAULT_WIKI_PATH]);
+  const sources = uniquePaths([DEFAULT_CAPTURE_PATH, ...discoveredSources]);
+  const config = {
+    version: 1,
+    areas: {
+      capture: { path: DEFAULT_CAPTURE_PATH },
+      wiki: { [DEFAULT_WIKI_NAME]: { path: DEFAULT_WIKI_PATH } }
+    },
+    sources: sources.map((sourcePath) => ({ path: sourcePath })),
+    defaultWiki: DEFAULT_WIKI_NAME
+  };
+
+  return { content: `${JSON.stringify(config, null, 2)}\n`, sources };
 }

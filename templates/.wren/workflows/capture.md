@@ -27,6 +27,7 @@ If tags are missing, suggest a small set of relevant tags.
 - Do not write to wiki workspaces.
 - Preserve the discussion as source-level memory, not polished worldview synthesis.
 - Show the proposed capture content and target path before writing.
+- If the configured capture area does not exist yet, say: `The folder <capture path>/ does not currently exist, so writing this would create that configured capture area directory.`
 - Wait for explicit user approval before writing.
 
 ## Capture Content
@@ -37,7 +38,6 @@ Preserve:
 - important assumptions
 - disagreements or tensions
 - tags as Markdown tags
-- conversation metadata
 
 Use a simple date metadata block with only `date` until the lint/schema rules are defined. The default capture template keeps the title as the first line for Obsidian compatibility. Render tags through the template `{{tags}}` placeholder as Markdown tags, not metadata.
 
@@ -45,7 +45,7 @@ Use a simple date metadata block with only `date` until the lint/schema rules ar
 
 1. Identify the configured capture path from `.wren/config.json`.
 2. Draft a capture note using `.wren/templates/capture.md` as the editable structure.
-3. Include conversation metadata that says it was captured from an agent discussion.
+3. Include only contextual details that materially help interpret the capture.
 4. Ask the user to approve the content and path.
 5. After approval, write the note to the capture area.
 6. Report the created path.
