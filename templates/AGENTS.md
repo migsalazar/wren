@@ -23,6 +23,8 @@ If a workflow file is missing, explain that the Wren workflow scaffold is incomp
 - The capture area is ordinary source evidence when it is listed in `sources`, and Wren can write captures there with user approval.
 - Wiki workspaces are generated synthesis.
 - Search before reading broadly; prefer a narrow set of relevant source files.
+- If `useBm25` is true, `/wren recall` may use `wren search` as a deterministic retrieval helper.
+- If `useBm25` is false, do not use `wren search` during `/wren recall`.
 - Do not read outside configured `sources` unless the user explicitly provides additional files or paths for the current task.
 - Do not rewrite notes unless explicitly asked.
 - Do not write outside configured Wren areas.
@@ -30,7 +32,7 @@ If a workflow file is missing, explain that the Wren workflow scaffold is incomp
 ## Workflow Summary
 
 - `/wren capture`: summarize the current agent discussion into the configured capture area as source-level memory.
-- `/wren recall`: read the wiki index first, then relevant wiki pages, then configured source evidence only as needed.
+- `/wren recall`: read the wiki index first, then relevant wiki pages, then use BM25/configured source evidence only as needed.
 - `/wren reflect`: update wiki synthesis from cited configured source evidence, including index and log updates.
 - `/wren lint`: report structure/link/source issues without silently rewriting notes.
 

@@ -15,6 +15,7 @@ export interface WrenConfig {
     wiki: Record<string, { path: string }>;
   };
   sources: SourceArea[];
+  useBm25: boolean;
   defaultWiki: string;
 }
 
@@ -69,6 +70,7 @@ function validateConfig(value: unknown): WrenConfig {
 
   validateAreaBoundaries(capturePath, wikiPaths);
   const sources = validateSources(value.sources, capturePath, wikiPaths);
+  const useBm25 = validateUseBm25(value.useBm25);
 
   return {
     version: 1,
@@ -77,6 +79,7 @@ function validateConfig(value: unknown): WrenConfig {
       wiki: wikiAreas
     },
     sources,
+    useBm25,
     defaultWiki
   };
 }
@@ -105,6 +108,12 @@ function validateAreaBoundaries(capturePath: string, wikiPaths: Map<string, stri
       throw new Error(`${CONFIG_PATH} areas.capture.path must not overlap areas.wiki.${name}.path.`);
     }
   }
+}
+
+function validateUseBm25(value: unknown): boolean {
+  if (value === undefined) return false;
+  if (typeof value !== 'boolean') throw new Error(`${CONFIG_PATH} useBm25 must be a boolean.`);
+  return value;
 }
 
 function validateSources(value: unknown, capturePath: string, wikiPaths: Map<string, string>): SourceArea[] {

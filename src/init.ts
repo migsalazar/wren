@@ -65,6 +65,7 @@ export function formatInitResult(result: InitResult): string {
   }
 
   lines.push('Next:');
+  lines.push('  wren index');
   lines.push('  Use /wren capture with an agent in this vault');
   lines.push('  wren doctor');
 
@@ -81,6 +82,7 @@ async function buildInitialConfig(rootDir: string): Promise<{ content: string; s
       wiki: { [DEFAULT_WIKI_NAME]: { path: DEFAULT_WIKI_PATH } }
     },
     sources: sources.map((sourcePath) => ({ path: sourcePath })),
+    useBm25: true,
     defaultWiki: DEFAULT_WIKI_NAME
   };
 

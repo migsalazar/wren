@@ -35,6 +35,7 @@ test('loadConfig parses valid config', async () => {
         wiki: { default: { path: 'wiki' } }
       },
       sources: [{ path: 'capture' }, { path: 'notes' }],
+      useBm25: true,
       defaultWiki: 'default'
     });
 
@@ -44,6 +45,7 @@ test('loadConfig parses valid config', async () => {
     assert.equal(config.areas.capture.path, 'capture');
     assert.equal(config.areas.wiki.default.path, 'wiki');
     assert.deepEqual(config.sources, [{ path: 'capture' }, { path: 'notes' }]);
+    assert.equal(config.useBm25, true);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -134,6 +136,45 @@ test('loadConfig rejects empty path segments', async () => {
     });
 
     await assert.rejects(loadConfig(root), /areas\.capture\.path must not contain empty path segments/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig defaults missing useBm25 to false', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        capture: { path: 'capture' },
+        wiki: { default: { path: 'wiki' } }
+      },
+      defaultWiki: 'default'
+    });
+
+    const config = await loadConfig(root);
+
+    assert.equal(config.useBm25, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects non-boolean useBm25', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        capture: { path: 'capture' },
+        wiki: { default: { path: 'wiki' } }
+      },
+      useBm25: 'yes',
+      defaultWiki: 'default'
+    });
+
+    await assert.rejects(loadConfig(root), /useBm25 must be a boolean/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

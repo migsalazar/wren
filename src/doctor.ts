@@ -2,6 +2,7 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { CONFIG_PATH, WrenConfig, loadConfig } from './config.js';
 import { pathExists } from './files.js';
+import { getSearchIndexStatus } from './search.js';
 import { discoverTopLevelSourceFolders } from './sources.js';
 
 export type DoctorStatus = 'ok' | 'warn' | 'error';
@@ -56,6 +57,7 @@ export async function runDoctor(rootDir: string): Promise<DoctorReport> {
   await checkPath(checks, rootDir, config.areas.capture.path, 'capture directory', 'warn');
   await checkSourceFolders(checks, rootDir, config);
   await checkUnconfiguredSourceFolders(checks, rootDir, config);
+  await checkSearchIndex(checks, rootDir, config);
   await checkPath(checks, rootDir, 'AGENTS.md', 'agent instructions', 'warn');
 
   return summarize(checks);
@@ -114,6 +116,29 @@ async function checkUnconfiguredSourceFolders(
     if (configuredSources.has(candidate)) continue;
     checks.push(warn(`source folder not configured: ${candidate} (review sources in ${CONFIG_PATH})`));
   }
+}
+
+async function checkSearchIndex(checks: DoctorCheck[], rootDir: string, config: WrenConfig): Promise<void> {
+  const status = await getSearchIndexStatus(rootDir, config);
+
+  if (status.status === 'disabled') {
+    checks.push(ok('BM25 recall disabled'));
+    return;
+  }
+
+  checks.push(ok('BM25 recall enabled'));
+
+  if (status.status === 'missing') {
+    checks.push(warn(`search index missing: ${status.path}`));
+    return;
+  }
+
+  if (status.status === 'stale') {
+    checks.push(warn(`search index stale: ${status.reason}`));
+    return;
+  }
+
+  checks.push(ok(`search index fresh: ${status.documentCount} files`));
 }
 
 async function checkPath(

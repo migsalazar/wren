@@ -15,5 +15,6 @@
       "path": "capture"
     }
   ],
+  "useBm25": true,
   "defaultWiki": "default"
 }

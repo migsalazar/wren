@@ -40,7 +40,7 @@ wiki/index.md
 wiki/log.md
 ```
 
-When creating `.wren/config.json`, `wren init` detects top-level Markdown folders and lists them as `sources`. It always includes the capture path as a source, and it skips wiki, hidden, and system folders. Review the generated `sources` list in `.wren/config.json` and remove anything Wren should not use as evidence.
+When creating `.wren/config.json`, `wren init` detects top-level Markdown folders and lists them as `sources`. It always includes the capture path as a source, skips wiki, hidden, and system folders, and enables local BM25 search with `useBm25`. Review the generated config and remove anything Wren should not use as evidence.
 
 Use Wren through local agent workflows:
 
@@ -74,14 +74,15 @@ printf '## Summary\n\nWe clarified the Wren capture workflow.\n' \
   | wren capture --title "Wren capture workflow" --tag wren --stdin
 ```
 
-Check deterministic health when needed:
+Build the local search index and check deterministic health when needed:
 
 ```bash
+wren index
 wren doctor
 wren lint
 ```
 
-`wren doctor` may warn that the configured capture directory is missing until the first capture is created. It also warns when top-level Markdown folders outside wiki, hidden, and system folders are not listed in `sources`.
+`wren doctor` may warn that the configured capture directory is missing until the first capture is created. It also warns when top-level Markdown folders outside wiki, hidden, and system folders are not listed in `sources`, and when BM25 search is enabled but the local search index is missing or stale.
 
 For local development in this repository:
 
@@ -107,7 +108,7 @@ wiki workspace            -> Wren-maintained synthesis/output
 
 Capture notes are not the privileged source of truth. They are ordinary source notes when the capture path is listed in `sources`; Wren also happens to create captures there.
 
-During recall and reflection, Wren reads from configured `sources` and from files or folders the user explicitly provides for the current task. Writes remain constrained: `/wren capture` writes only to the configured capture area, and `/wren reflect` writes only to configured wiki workspaces after approval.
+During recall and reflection, Wren reads from configured `sources` and from files or folders the user explicitly provides for the current task. When `useBm25` is true, recall may use the local `wren search` index as a deterministic retrieval gate. Writes remain constrained: `/wren capture` writes only to the configured capture area, and `/wren reflect` writes only to configured wiki workspaces after approval.
 
 ## Local Protocol Files
 
@@ -156,7 +157,7 @@ Capture is not wiki synthesis. It preserves what happened, including summary, as
 
 Recover relevant context and relate it to the current discussion.
 
-Recall reads the wiki index first, then relevant wiki pages, then configured source notes only when evidence, detail, freshness, or missing synthesis requires it. The goal is useful context and connections, not plain keyword search.
+Recall reads the wiki index first, then relevant wiki pages, then configured source notes only when evidence, detail, freshness, or missing synthesis requires it. If `useBm25` is true, recall may use `wren search` to find candidate wiki/source files before reading them. The goal is useful context and connections, not plain keyword search.
 
 ### `/wren reflect`
 
@@ -183,10 +184,14 @@ The CLI supports the local protocol but does not replace the agent workflows.
 
 ```bash
 wren init
+wren index
+wren search "query" --area all --limit 10
 wren doctor
 wren capture --title "Discussion title" --tag wren --stdin
 wren lint
 ```
+
+`wren index` builds a disposable BM25 search cache at `.wren/cache/search-index.json` from configured wiki workspaces and `sources`. `wren search` reads that cache and returns ranked, line-numbered snippets for agents. Markdown files remain the source of truth.
 
 `wren capture` reads the editable vault-local template at `.wren/templates/capture.md`. The `--stdin` body is inserted into that template. Tags are written as Markdown tags in the generated note.
 

@@ -28,10 +28,12 @@ test('initWren creates scaffold files without creating capture folder', async ()
 
     const config = JSON.parse(await readFile(path.join(root, '.wren/config.json'), 'utf8')) as {
       sources: Array<{ path: string }>;
+      useBm25: boolean;
     };
 
     assert.deepEqual(result.configuredSources, ['capture']);
     assert.deepEqual(config.sources, [{ path: 'capture' }]);
+    assert.equal(config.useBm25, true);
     await assert.rejects(readFile(path.join(root, 'capture'), 'utf8'));
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -55,10 +57,12 @@ test('initWren detects top-level Markdown source folders', async () => {
     const result = await initWren(root, packageRoot);
     const config = JSON.parse(await readFile(path.join(root, '.wren/config.json'), 'utf8')) as {
       sources: Array<{ path: string }>;
+      useBm25: boolean;
     };
 
     assert.deepEqual(result.configuredSources, ['capture', 'notes']);
     assert.deepEqual(config.sources, [{ path: 'capture' }, { path: 'notes' }]);
+    assert.equal(config.useBm25, true);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
