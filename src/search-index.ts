@@ -170,24 +170,41 @@ async function collectIndexedFiles(
   const files = new Map<string, IndexedFile>();
 
   for (const wiki of Object.values(config.areas.wiki)) {
-    await collectAreaFiles(rootDir, wiki.path, 'wiki', files, warnings, true);
+    await collectAreaFiles({
+      rootDir,
+      relativeRoot: wiki.path,
+      area: 'wiki',
+      files,
+      warnings,
+      missingIsWarning: true
+    });
   }
 
   for (const source of config.sources) {
-    await collectAreaFiles(rootDir, source.path, 'source', files, warnings, source.path !== config.areas.capture.path);
+    await collectAreaFiles({
+      rootDir,
+      relativeRoot: source.path,
+      area: 'source',
+      files,
+      warnings,
+      missingIsWarning: source.path !== config.areas.capture.path
+    });
   }
 
   return [...files.values()].sort((first, second) => first.relativePath.localeCompare(second.relativePath));
 }
 
-async function collectAreaFiles(
-  rootDir: string,
-  relativeRoot: string,
-  area: IndexedArea,
-  files: Map<string, IndexedFile>,
-  warnings: string[],
-  missingIsWarning: boolean
-): Promise<void> {
+interface CollectAreaFilesOptions {
+  rootDir: string;
+  relativeRoot: string;
+  area: IndexedArea;
+  files: Map<string, IndexedFile>;
+  warnings: string[];
+  missingIsWarning: boolean;
+}
+
+async function collectAreaFiles(options: CollectAreaFilesOptions): Promise<void> {
+  const { rootDir, relativeRoot, area, files, warnings, missingIsWarning } = options;
   const absoluteRoot = path.join(rootDir, relativeRoot);
   if (!(await pathExists(absoluteRoot))) {
     if (missingIsWarning) warnings.push(`${area} directory missing: ${relativeRoot}`);
