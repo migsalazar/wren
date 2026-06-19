@@ -30,12 +30,15 @@ If a workflow file is missing, explain that the Wren workflow scaffold is incomp
 ## Workflow Summary
 
 - `/wren capture`: summarize the current agent discussion into the configured capture area as source-level memory.
-- `/wren recall`: search wiki first, then configured source evidence as needed, and relate useful context to the current discussion.
-- `/wren reflect`: update wiki synthesis from cited configured source evidence.
+- `/wren recall`: read the wiki index first, then relevant wiki pages, then configured source evidence only as needed.
+- `/wren reflect`: update wiki synthesis from cited configured source evidence, including index and log updates.
 - `/wren lint`: report structure/link/source issues without silently rewriting notes.
 
 ## Wiki Rules
 
-- `wiki/log.md` is append-only.
+- `wiki/index.md` is the content-oriented catalog of wiki pages: link, one-line summary, and useful category/metadata.
+- Read `wiki/index.md` first during recall.
+- Update `wiki/index.md` whenever wiki pages are created or meaningfully changed.
+- `wiki/log.md` is append-only and chronological.
+- Log headings should use `## [YYYY-MM-DD] type | Title`.
 - Generated wiki synthesis pages require `## Sources`.
-- Keep `wiki/index.md` concise and useful.

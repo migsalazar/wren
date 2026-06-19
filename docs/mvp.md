@@ -21,8 +21,9 @@ wiki/*.md
 - Read configured source folders as evidence.
 - Write capture notes only to the configured capture area.
 - Write generated synthesis only to configured wiki workspaces.
-- Keep `wiki/index.md` useful.
-- Append meaningful activity to `wiki/log.md`.
+- Keep `wiki/index.md` as a content-oriented catalog of wiki pages.
+- Update `wiki/index.md` whenever wiki pages are created or meaningfully changed.
+- Append meaningful activity to `wiki/log.md` using parseable headings like `## [YYYY-MM-DD] reflect | Title`.
 - Support `/wren capture`, `/wren recall`, `/wren reflect`, and `/wren lint` workflows.
 - Keep capture and wiki page formats editable through local Wren templates.
 - Use deterministic scripts for checks where scripts are better than agents.

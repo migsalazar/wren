@@ -18,10 +18,12 @@ Reflection maintains what Wren understands. It is deeper than capture and should
 - Search before reading broadly; prefer a narrow set of relevant source files.
 - Write synthesis only to configured wiki workspaces.
 - Do not rewrite source notes or capture notes unless the user explicitly asks.
-- Generated wiki synthesis pages require a `## Sources` section.
-- Keep `wiki/index.md` concise and useful.
+- Generated wiki synthesis pages require a `## Sources` section that cites source notes.
+- Keep `wiki/index.md` as the content-oriented catalog of wiki pages: link, one-line summary, and useful category/metadata.
+- Update `wiki/index.md` on every wiki page creation or meaningful wiki page change.
 - Append meaningful activity to `wiki/log.md`; do not rewrite prior log entries.
-- Show proposed wiki changes before writing and wait for approval.
+- Use parseable log headings: `## [YYYY-MM-DD] reflect | Title`.
+- Show proposed wiki changes, index changes, and log entry before writing; wait for approval.
 - Do not report "no changes" without listing what evidence was searched or read and why no wiki update is warranted.
 
 ## Suggested Procedure
@@ -30,9 +32,9 @@ Reflection maintains what Wren understands. It is deeper than capture and should
 2. Search or read relevant notes from configured `sources`, or from explicitly provided evidence paths.
 3. Extract claims, questions, patterns, decisions, and tensions.
 4. Draft wiki updates with source links. For new wiki pages, use `.wren/templates/wiki.md` as the editable structure and render useful tags through the `{{tags}}` placeholder as Markdown tags.
-5. Update or create synthesis pages only after approval.
-6. Update the wiki index if useful.
-7. Append a concise log entry describing the reflection work.
+5. Draft corresponding `wiki/index.md` updates for every created or meaningfully changed wiki page.
+6. Draft a concise `wiki/log.md` entry using `## [YYYY-MM-DD] reflect | Title`.
+7. Update or create synthesis pages, the index, and the log only after approval.
 
 ## Output
 

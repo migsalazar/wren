@@ -135,6 +135,15 @@ The generated `AGENTS.md` routes namespaced workflow requests to the local workf
 
 Templates are intentionally local and editable. For example, the default capture template keeps the title as the first line for Obsidian compatibility.
 
+## Wiki Index and Log
+
+Two wiki files help Wren navigate accumulated synthesis:
+
+- `wiki/index.md` is content-oriented. It catalogs wiki pages with links, one-line summaries, and useful categories or metadata. Recall reads it first, then drills into relevant wiki pages.
+- `wiki/log.md` is chronological. It is append-only and records meaningful Wren activity with parseable headings like `## [YYYY-MM-DD] reflect | Title`.
+
+Reflect should update `wiki/index.md` whenever wiki pages are created or meaningfully changed, and append a concise entry to `wiki/log.md`.
+
 ## Workflows
 
 ### `/wren capture`
@@ -147,13 +156,13 @@ Capture is not wiki synthesis. It preserves what happened, including summary, as
 
 Recover relevant context and relate it to the current discussion.
 
-Recall searches the wiki first, then reads configured source notes only when needed. The goal is useful context and connections, not plain keyword search.
+Recall reads the wiki index first, then relevant wiki pages, then configured source notes only when evidence, detail, freshness, or missing synthesis requires it. The goal is useful context and connections, not plain keyword search.
 
 ### `/wren reflect`
 
 Turn configured source notes into wiki synthesis.
 
-Use reflect to introduce existing notes into Wren's wiki. Source evidence can include normal vault notes and capture notes when those folders are listed in `sources`. Reflect updates configured wiki workspaces with traceable synthesis. Generated wiki pages require `## Sources`; meaningful activity should be appended to `wiki/log.md`.
+Use reflect to introduce existing notes into Wren's wiki. Source evidence can include normal vault notes and capture notes when those folders are listed in `sources`. Reflect updates configured wiki workspaces with traceable synthesis. Generated wiki pages require `## Sources`; every meaningful wiki page change should update `wiki/index.md` and append to `wiki/log.md`.
 
 ### `/wren lint`
 
