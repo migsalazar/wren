@@ -1,14 +1,11 @@
 # Wren
 
-**WREN: Worldview, Reflection, Experience, Notes.**
+Wren is a Markdown-first protocol for maintaining traceable reflections across a local collection of Markdown files, designed with Obsidian vaults in mind.
 
-Wren is a personal reflection protocol for an Obsidian vault.
+It provides a local `wiki/` workspace for indexes, summaries, concept pages, logs, and consolidation proposals derived from your Markdown notes.
 
-It uses an opinionated, local-first LLM-wiki pattern: Markdown notes remain durable evidence, while an LLM agent maintains a generated `wiki/` workspace for indexes, logs, concept pages, summaries, and consolidation proposals.
+The core boundary is simple: source notes are evidence, wiki pages are synthesis, and the LLM is a maintainer rather than an opaque memory store.
 
-The goal is not to build a general wiki or an opaque memory store. The goal is to preserve a traceable, evolving worldview from experience and notes inside the vault you already use.
-
-> What remains after experience and noise.
 
 ## Install from Source
 

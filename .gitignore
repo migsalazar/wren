@@ -37,3 +37,22 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# npm package archives
+*.tgz
+
+# Local shell/env tooling
+.envrc
+.direnv/
+
+# Accidental Wren vault content in repo root
+/.wren/
+/wiki/
+/capture/
+
+# Extra OS/editor temp files
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
