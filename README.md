@@ -2,9 +2,7 @@
 
 Wren is a Markdown-first protocol for maintaining traceable reflections across a local collection of Markdown files, designed with Obsidian vaults in mind.
 
-It provides a local `wiki/` workspace for indexes, summaries, concept pages, logs, and consolidation proposals derived from your Markdown notes.
-
-The core boundary is simple: source notes are evidence, wiki pages are synthesis, and the LLM is a maintainer rather than an opaque memory store.
+It helps agents work with an Obsidian vault without turning the agent into your memory store. Wren adds local workflows and CLI helpers for three tasks: capturing conversations, recalling relevant context, and reflecting source notes into a source-linked wiki.
 
 
 ## Install from Source
@@ -14,18 +12,24 @@ git clone https://github.com/migsalazar/wren.git
 cd wren
 npm install
 npm run build
-npm link
+npm link             # install the wren CLI
+pi install "$(pwd)"  # install the Pi /wren adapter
 ```
+
+### Using with other agents
+
+Agents that read `AGENTS.md` can use `/wren capture`, `/wren recall`, `/wren reflect`, and `/wren lint` without an adapter. Right now, Pi is the only adapter; adapters are ergonomic conveniences.
 
 ## Quickstart
 
 From an Obsidian vault or another Markdown workspace:
 
 ```bash
+cd /path/to/obsidian/vault
 wren init
 ```
 
-`wren init` creates the local Wren scaffold without overwriting existing files:
+`wren init` creates local Wren files without overwriting existing files:
 
 ```text
 .wren/config.json
@@ -37,41 +41,37 @@ wiki/index.md
 wiki/log.md
 ```
 
-When creating `.wren/config.json`, `wren init` detects top-level Markdown folders and lists them as `sources`. It always includes the capture path as a source, skips wiki, hidden, and system folders, and enables local BM25 search with `useBm25`. Review the generated config and remove anything Wren should not use as evidence.
+Review `.wren/config.json`; Wren auto-detects top-level Markdown folders as `sources`, includes the capture path, skips wiki/hidden/system folders, and enables BM25 search. You can configure these paths and options, and should remove anything Wren should not use as evidence.
 
-Use Wren through local agent workflows:
+## Use Wren
+
+From the vault or Markdown workspace, start your agent and use:
 
 ```text
-/wren capture
-/wren recall
-/wren reflect
-/wren lint
+/wren help
+/wren capture [instructions]
+/wren recall [query]
+/wren reflect [scope]
+/wren lint [scope]
 ```
 
-A typical capture flow is:
+With the Pi adapter installed, helper commands are also available:
 
-1. Discuss something with an agent inside the vault.
-2. Invoke `/wren capture`.
-3. Review the proposed capture note.
-4. Approve the write to the configured capture area.
+```text
+/wren init
+/wren doctor
+/wren index
+/wren search <query>
+```
 
-A typical reflection flow for existing notes is:
+Typical flows:
 
-1. Review `.wren/config.json` and confirm the relevant folders are listed in `sources`.
-2. Invoke `/wren reflect`.
-3. Review the proposed wiki updates and source links.
-4. Approve the write to the configured wiki workspace.
+- Capture: discuss something with an agent, invoke `/wren capture`, review the proposed note, then approve the write.
+- Reflect: review configured `sources`, invoke `/wren reflect`, review the proposed wiki updates and source links, then approve the write.
 
 Wren does not automatically synthesize notes. Use `/wren reflect` to introduce configured source notes into Wren's wiki synthesis.
 
-The CLI can also create a capture from stdin:
-
-```bash
-printf '## Summary\n\nWe clarified the Wren capture workflow.\n' \
-  | wren capture --title "Wren capture workflow" --tag wren --stdin
-```
-
-Build the local search index and check deterministic health when needed:
+For local health and search:
 
 ```bash
 wren index
@@ -79,37 +79,23 @@ wren doctor
 wren lint
 ```
 
-`wren doctor` may warn that the configured capture directory is missing until the first capture is created. It also warns when top-level Markdown folders outside wiki, hidden, and system folders are not listed in `sources`, and when BM25 search is enabled but the local search index is missing or stale.
-
-For local development in this repository:
-
-```bash
-npm run build
-node dist/cli.js --help
-npm test
-```
+`wren doctor` may warn about a missing capture directory before the first capture, unlisted top-level Markdown folders, or a missing/stale BM25 index.
 
 ## Core Idea
 
-Wren treats Markdown as durable memory.
-
-The LLM can help search, summarize, synthesize, question, and maintain knowledge, but the durable artifacts remain plain files in the vault. The LLM is a maintainer and reflection assistant, not the source of truth.
-
-Wren separates three roles:
+Wren treats Markdown as durable memory. The LLM can search, summarize, synthesize, and maintain knowledge, but plain files remain the durable artifacts.
 
 ```text
 configured source folders -> source evidence
-wiki workspace            -> Wren-maintained synthesis/output
+wiki workspace            -> source-linked synthesis
 .wren/                    -> protocol, config, and templates
 ```
 
-Capture notes are not the privileged source of truth. They are ordinary source notes when the capture path is listed in `sources`; Wren also happens to create captures there.
-
-During recall and reflection, Wren reads from configured `sources` and from files or folders the user explicitly provides for the current task. When `useBm25` is true, recall may use the local `wren search` index as a deterministic retrieval gate. Writes remain constrained: `/wren capture` writes only to the configured capture area, and `/wren reflect` writes only to configured wiki workspaces after approval.
+Capture notes are ordinary source notes when the capture path is listed in `sources`. During recall and reflection, Wren reads configured `sources` plus files or folders the user explicitly provides. Writes stay constrained: `/wren capture` writes to the configured capture area, and `/wren reflect` writes to configured wiki workspaces after approval.
 
 ## Local Protocol Files
 
-Wren behavior lives in vault-local files, not global agent skills:
+Wren behavior lives in vault-local files:
 
 ```text
 .wren/config.json
@@ -122,62 +108,42 @@ Wren behavior lives in vault-local files, not global agent skills:
 AGENTS.md
 ```
 
-The generated `AGENTS.md` routes namespaced workflow requests to the local workflow files:
-
-```text
-/wren capture -> .wren/workflows/capture.md
-/wren recall  -> .wren/workflows/recall.md
-/wren reflect -> .wren/workflows/reflect.md
-/wren lint    -> .wren/workflows/lint.md
-```
-
-Templates are intentionally local and editable. For example, the default capture template keeps the title as the first line for Obsidian compatibility.
+The generated `AGENTS.md` maps workflow requests to `.wren/workflows/*.md`. Templates are local and editable; the default capture template keeps the title as the first line for Obsidian compatibility.
 
 ## Wiki Index and Log
 
-Two wiki files help Wren navigate accumulated synthesis:
+- `wiki/index.md` catalogs wiki pages with links, summaries, and useful categories. Recall reads it first.
+- `wiki/log.md` is append-only and chronological, with headings like `## [YYYY-MM-DD] reflect | Title`.
 
-- `wiki/index.md` is content-oriented. It catalogs wiki pages with links, one-line summaries, and useful categories or metadata. Recall reads it first, then drills into relevant wiki pages.
-- `wiki/log.md` is chronological. It is append-only and records meaningful Wren activity with parseable headings like `## [YYYY-MM-DD] reflect | Title`.
-
-Reflect should update `wiki/index.md` whenever wiki pages are created or meaningfully changed, and append a concise entry to `wiki/log.md`.
+Reflect should update `wiki/index.md` for meaningful wiki changes and append a concise entry to `wiki/log.md`.
 
 ## Workflows
 
 ### `/wren capture`
 
-Summarize the current agent discussion into a source-level capture note.
-
-Capture is not wiki synthesis. It preserves what happened, including summary, assumptions, disagreements or tensions, and Markdown tags. It writes only to the configured capture area after user approval.
+Summarize the current agent discussion into a source-level capture note. Capture preserves summary, assumptions, disagreements or tensions, and Markdown tags; it writes only after approval.
 
 ### `/wren recall`
 
-Recover relevant context and relate it to the current discussion.
-
-Recall reads the wiki index first, then relevant wiki pages, then configured source notes only when evidence, detail, freshness, or missing synthesis requires it. If `useBm25` is true, recall may use `wren search` to find candidate wiki/source files before reading them. The goal is useful context and connections, not plain keyword search.
+Recover relevant context and relate it to the current discussion. Recall reads the wiki index, relevant wiki pages, and configured source notes when evidence, detail, or freshness requires it. When BM25 is enabled, recall may use `wren search` as a retrieval gate.
 
 ### `/wren reflect`
 
-Turn configured source notes into wiki synthesis.
-
-Use reflect to introduce existing notes into Wren's wiki. Source evidence can include normal vault notes and capture notes when those folders are listed in `sources`. Reflect updates configured wiki workspaces with traceable synthesis. Generated wiki pages require `## Sources`; every meaningful wiki page change should update `wiki/index.md` and append to `wiki/log.md`.
+Turn configured source notes into source-linked wiki synthesis. Generated wiki pages require `## Sources`; meaningful changes should also update `wiki/index.md` and `wiki/log.md`.
 
 ### `/wren lint`
 
-Check Wren workspace health without silently rewriting notes.
-
-The `wren lint` CLI currently checks configured capture/wiki areas for:
+Check Wren workspace health without silently rewriting notes. It currently reports:
 
 - wiki pages without `## Sources`, except `index.md` and `log.md`,
 - wiki pages missing from the wiki index,
-- empty capture notes,
-- empty wiki pages,
-- broken relative Markdown links within configured capture/wiki areas,
+- empty capture notes or wiki pages,
+- broken relative Markdown links in configured capture/wiki areas,
 - broken simple wikilinks by filename or title match.
 
 ## CLI Helpers
 
-The CLI supports the local protocol but does not replace the agent workflows.
+The CLI supports deterministic setup, search, diagnostics, and capture helpers:
 
 ```bash
 wren init
@@ -188,27 +154,33 @@ wren capture --title "Discussion title" --tag wren --stdin
 wren lint
 ```
 
-`wren index` builds a disposable BM25 search cache at `.wren/cache/search-index.json` from configured wiki workspaces and `sources`. `wren search` reads that cache and returns ranked, line-numbered snippets for agents. Markdown files remain the source of truth.
+`wren index` builds `.wren/cache/search-index.json`; `wren search` returns ranked, line-numbered snippets. `wren capture --stdin` uses the local `.wren/templates/capture.md` template.
 
-`wren capture` reads the editable vault-local template at `.wren/templates/capture.md`. The `--stdin` body is inserted into that template. Tags are written as Markdown tags in the generated note.
+## Development
 
-## Current Scope
+From the Wren repository checkout:
 
-Wren's first useful version proves the protocol before adding heavier infrastructure.
-
-Current scaffold:
-
-```text
-.wren/config.json
-.wren/workflows/*.md
-.wren/templates/*.md
-AGENTS.md
-wiki/index.md
-wiki/log.md
+```bash
+npm install            # first-time dependency install
+npm run check          # type-check
+npm run build          # compile src/ to dist/
+node dist/cli.js --help
+npm test               # build and run tests
 ```
 
-## Design Principle
+For a local vault smoke test:
 
-Build trust before automation.
-
-Wren should first be reliable at maintaining a simple Markdown boundary: capture notes stay readable, generated synthesis stays inspectable, and useful reflections remain traceable over time.
+```bash
+REPO="$(pwd)"
+VAULT="$(mktemp -d /tmp/wren-smoke-XXXXXX)"
+mkdir -p "$VAULT/notes"
+printf '# Smoke source\n\nThis note is evidence for a Wren smoke test.\n' > "$VAULT/notes/source.md"
+cd "$VAULT"
+node "$REPO/dist/cli.js" init
+node "$REPO/dist/cli.js" index
+node "$REPO/dist/cli.js" doctor
+node "$REPO/dist/cli.js" lint
+pi --mode json --print --no-session --offline --approve "/wren help"
+cd "$REPO"
+rm -rf "$VAULT"
+```

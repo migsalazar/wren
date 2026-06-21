@@ -6,12 +6,14 @@ Read `.wren/config.json` before doing Wren work.
 
 Wren workflows are vault-local protocol files, not global agent skills.
 
-When the user invokes a Wren workflow, read the corresponding local workflow file and follow it:
+When the user invokes a Wren workflow, including through a host adapter command such as `/wren`, read the corresponding local workflow file and follow it:
 
 - `/wren capture` -> `.wren/workflows/capture.md`
 - `/wren recall` -> `.wren/workflows/recall.md`
 - `/wren reflect` -> `.wren/workflows/reflect.md`
 - `/wren lint` -> `.wren/workflows/lint.md`
+
+If the host does not expose `/wren` as an installed slash command, treat these forms as workflow requests when the user types them or asks to use Wren by name.
 
 If a workflow file is missing, explain that the Wren workflow scaffold is incomplete and suggest running `wren init`.
 
