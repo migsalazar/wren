@@ -14,7 +14,8 @@
     "markdown",
     "reflection",
     "notes",
-    "cli"
+    "cli",
+    "pi-package"
   ],
   "bin": {
     "wren": "dist/cli.js"
@@ -24,9 +25,13 @@
     "!dist/**/*.test.js",
     "!dist/**/*.test.d.ts",
     "templates/",
+    "docs/",
     "README.md",
     "LICENSE"
   ],
+  "pi": {
+    "extensions": ["dist/agent-adapters/pi/index.js"]
+  },
   "scripts": {
     "build": "tsc",
     "check": "tsc --noEmit",

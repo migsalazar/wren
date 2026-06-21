@@ -66,7 +66,7 @@ export function formatInitResult(result: InitResult): string {
 
   lines.push('Next:');
   lines.push('  wren index');
-  lines.push('  Use /wren capture with an agent in this vault');
+  lines.push('  Use /wren capture with a Wren agent adapter, or ask an agent to follow .wren/workflows/capture.md');
   lines.push('  wren doctor');
 
   return lines.join('\n');
