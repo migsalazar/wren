@@ -7,7 +7,7 @@ import { formatInitResult, initWren } from './init.js';
 
 const packageRoot = process.cwd();
 
-test('initWren creates scaffold files without creating capture folder', async () => {
+test('initWren creates scaffold files without creating recap folder', async () => {
   const root = await tempDir();
   try {
     const result = await initWren(root, packageRoot);
@@ -15,11 +15,11 @@ test('initWren creates scaffold files without creating capture folder', async ()
     assert.deepEqual(result.skipped, []);
     assert.deepEqual(result.created.sort(), [
       '.wren/config.json',
-      '.wren/workflows/capture.md',
+      '.wren/workflows/recap.md',
       '.wren/workflows/lint.md',
       '.wren/workflows/recall.md',
       '.wren/workflows/reflect.md',
-      '.wren/templates/capture.md',
+      '.wren/templates/recap.md',
       '.wren/templates/wiki.md',
       'AGENTS.md',
       'wiki/index.md',
@@ -31,10 +31,10 @@ test('initWren creates scaffold files without creating capture folder', async ()
       useBm25: boolean;
     };
 
-    assert.deepEqual(result.configuredSources, ['capture']);
-    assert.deepEqual(config.sources, [{ path: 'capture' }]);
+    assert.deepEqual(result.configuredSources, ['recap']);
+    assert.deepEqual(config.sources, [{ path: 'recap' }]);
     assert.equal(config.useBm25, true);
-    await assert.rejects(readFile(path.join(root, 'capture'), 'utf8'));
+    await assert.rejects(readFile(path.join(root, 'recap'), 'utf8'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -60,8 +60,8 @@ test('initWren detects top-level Markdown source folders', async () => {
       useBm25: boolean;
     };
 
-    assert.deepEqual(result.configuredSources, ['capture', 'notes']);
-    assert.deepEqual(config.sources, [{ path: 'capture' }, { path: 'notes' }]);
+    assert.deepEqual(result.configuredSources, ['recap', 'notes']);
+    assert.deepEqual(config.sources, [{ path: 'recap' }, { path: 'notes' }]);
     assert.equal(config.useBm25, true);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -87,7 +87,7 @@ test('formatInitResult shows created, skipped, and configured source files', () 
   const output = formatInitResult({
     created: ['.wren/config.json'],
     skipped: ['AGENTS.md'],
-    configuredSources: ['capture', 'notes']
+    configuredSources: ['recap', 'notes']
   });
 
   assert.match(output, /Created:/);
@@ -95,7 +95,7 @@ test('formatInitResult shows created, skipped, and configured source files', () 
   assert.match(output, /Skipped existing files:/);
   assert.match(output, /AGENTS\.md/);
   assert.match(output, /Configured source folders:/);
-  assert.match(output, /capture/);
+  assert.match(output, /recap/);
   assert.match(output, /notes/);
   assert.match(output, /Review them in \.wren\/config\.json/);
 });

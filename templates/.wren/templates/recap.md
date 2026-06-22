@@ -4,7 +4,7 @@
 date: {{date}}
 ---
 
-## Captured from: agent discussion
+## Recapped from: agent discussion
 
 {{body}}
 

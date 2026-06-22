@@ -25,7 +25,7 @@ test('runDoctor reports missing config as an error', async () => {
   }
 });
 
-test('runDoctor passes initialized vault with capture and search index warnings', async () => {
+test('runDoctor passes initialized vault with recap and search index warnings', async () => {
   const root = await tempDir();
   try {
     await initWren(root, packageRoot);
@@ -36,10 +36,10 @@ test('runDoctor passes initialized vault with capture and search index warnings'
     assert.equal(report.warnings, 2);
     assert.ok(report.checks.some((check) => check.message === 'config valid'));
     assert.ok(report.checks.some((check) => check.message === 'wiki index exists: wiki/index.md'));
-    assert.ok(report.checks.some((check) => check.message === 'capture workflow exists: .wren/workflows/capture.md'));
-    assert.ok(report.checks.some((check) => check.message === 'capture template exists: .wren/templates/capture.md'));
+    assert.ok(report.checks.some((check) => check.message === 'recap workflow exists: .wren/workflows/recap.md'));
+    assert.ok(report.checks.some((check) => check.message === 'recap template exists: .wren/templates/recap.md'));
     assert.ok(report.checks.some((check) => check.message === 'wiki template exists: .wren/templates/wiki.md'));
-    assert.ok(report.checks.some((check) => check.message === 'capture directory missing: capture'));
+    assert.ok(report.checks.some((check) => check.message === 'recap directory missing: recap'));
     assert.ok(report.checks.some((check) => check.message === 'BM25 recall enabled'));
     assert.ok(report.checks.some((check) => check.message === 'search index missing: .wren/cache/search-index.json'));
   } finally {
@@ -47,11 +47,11 @@ test('runDoctor passes initialized vault with capture and search index warnings'
   }
 });
 
-test('runDoctor passes without warnings when capture and search index exist', async () => {
+test('runDoctor passes without warnings when recap directory and search index exist', async () => {
   const root = await tempDir();
   try {
     await initWren(root, packageRoot);
-    await mkdir(path.join(root, 'capture'));
+    await mkdir(path.join(root, 'recap'));
     await buildAndWriteSearchIndex(root, await loadConfig(root));
 
     const report = await runDoctor(root);
@@ -68,7 +68,7 @@ test('runDoctor warns about Markdown folders missing from sources', async () => 
   const root = await tempDir();
   try {
     await initWren(root, packageRoot);
-    await mkdir(path.join(root, 'capture'));
+    await mkdir(path.join(root, 'recap'));
     await buildAndWriteSearchIndex(root, await loadConfig(root));
     await mkdir(path.join(root, 'notes'));
     await writeFile(path.join(root, 'notes', 'important.md'), '# Important\n', 'utf8');
@@ -91,15 +91,15 @@ test('runDoctor warns when search index is stale', async () => {
   const root = await tempDir();
   try {
     await initWren(root, packageRoot);
-    await mkdir(path.join(root, 'capture'));
+    await mkdir(path.join(root, 'recap'));
     await buildAndWriteSearchIndex(root, await loadConfig(root));
-    await writeFile(path.join(root, 'capture', 'new.md'), '# New\n', 'utf8');
+    await writeFile(path.join(root, 'recap', 'new.md'), '# New\n', 'utf8');
 
     const report = await runDoctor(root);
 
     assert.equal(report.errors, 0);
     assert.equal(report.warnings, 1);
-    assert.ok(report.checks.some((check) => check.message === 'search index stale: new Markdown file: capture/new.md'));
+    assert.ok(report.checks.some((check) => check.message === 'search index stale: new Markdown file: recap/new.md'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -111,7 +111,7 @@ test('runDoctor reports missing wiki files as errors', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
       defaultWiki: 'default'
@@ -134,14 +134,14 @@ test('formatDoctorReport renders status symbols and summary', () => {
     warnings: 1,
     checks: [
       { status: 'ok', message: 'config valid' },
-      { status: 'warn', message: 'capture directory missing: capture' },
+      { status: 'warn', message: 'recap directory missing: recap' },
       { status: 'error', message: 'wiki missing: wiki' }
     ]
   });
 
   assert.match(output, /^Wren doctor/);
   assert.match(output, /✓ config valid/);
-  assert.match(output, /! capture directory missing: capture/);
+  assert.match(output, /! recap directory missing: recap/);
   assert.match(output, /✗ wiki missing: wiki/);
   assert.match(output, /Result: 1 warning, 1 error/);
 });

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "areas": {
-    "capture": {
-      "path": "capture"
+    "recap": {
+      "path": "recap"
     },
     "wiki": {
       "default": {
@@ -12,7 +12,7 @@
   },
   "sources": [
     {
-      "path": "capture"
+      "path": "recap"
     }
   ],
   "useBm25": true,

@@ -48,13 +48,13 @@ export async function runDoctor(rootDir: string): Promise<DoctorReport> {
   await checkPath(checks, rootDir, wikiPath, 'wiki directory', 'error');
   await checkPath(checks, rootDir, path.join(wikiPath, 'index.md'), 'wiki index', 'error');
   await checkPath(checks, rootDir, path.join(wikiPath, 'log.md'), 'wiki log', 'error');
-  await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'capture.md'), 'capture workflow', 'error');
+  await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'recap.md'), 'recap workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'recall.md'), 'recall workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'reflect.md'), 'reflect workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'lint.md'), 'lint workflow', 'error');
-  await checkPath(checks, rootDir, path.join('.wren', 'templates', 'capture.md'), 'capture template', 'error');
+  await checkPath(checks, rootDir, path.join('.wren', 'templates', 'recap.md'), 'recap template', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'templates', 'wiki.md'), 'wiki template', 'error');
-  await checkPath(checks, rootDir, config.areas.capture.path, 'capture directory', 'warn');
+  await checkPath(checks, rootDir, config.areas.recap.path, 'recap directory', 'warn');
   await checkSourceFolders(checks, rootDir, config);
   await checkUnconfiguredSourceFolders(checks, rootDir, config);
   await checkSearchIndex(checks, rootDir, config);
@@ -90,7 +90,7 @@ async function checkSourceFolders(checks: DoctorCheck[], rootDir: string, config
 
     const absolutePath = path.join(rootDir, source.path);
     if (!(await pathExists(absolutePath))) {
-      if (source.path !== config.areas.capture.path) checks.push(warn(`source directory missing: ${source.path}`));
+      if (source.path !== config.areas.recap.path) checks.push(warn(`source directory missing: ${source.path}`));
       continue;
     }
 

@@ -71,7 +71,7 @@ test('resolveMetricInput collects repeated read values', () => {
 });
 
 test('resolveMetricInput rejects unknown events', () => {
-  assert.throws(() => resolveMetricInput({ event: 'publish' }), /--event must be one of: recall, reflect, capture, search\./);
+  assert.throws(() => resolveMetricInput({ event: 'publish' }), /--event must be one of: recall, reflect, recap, search\./);
 });
 
 test('wren metric CLI collects repeated read flags', async () => {
@@ -122,7 +122,7 @@ test('wren metric CLI rejects unexpected positional paths', async () => {
 test('appendMetric ensures the Wren cache gitignore exists', async () => {
   const root = await tempDir();
   try {
-    await appendMetric(root, { event: 'capture' });
+    await appendMetric(root, { event: 'recap' });
 
     assert.equal(await readFile(path.join(root, WREN_CACHE_GITIGNORE_PATH), 'utf8'), WREN_CACHE_GITIGNORE_CONTENT);
   } finally {

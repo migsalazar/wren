@@ -37,13 +37,13 @@ test('/wren recall builds a recall workflow prompt', () => {
   assert.match(plan.prompt, /Nietzsche memory/);
 });
 
-test('/wren capture preserves capture instructions', () => {
-  const plan = planWrenCommand('capture --title "Wren UX" preserve the command decision');
+test('/wren recap preserves recap instructions', () => {
+  const plan = planWrenCommand('recap --title "Wren UX" preserve the command decision');
 
   assert.equal(plan.kind, 'workflow');
-  assert.equal(plan.command, 'capture');
-  assert.equal(plan.workflowPath, '.wren/workflows/capture.md');
-  assert.match(plan.prompt, /\/wren capture --title "Wren UX" preserve the command decision/);
+  assert.equal(plan.command, 'recap');
+  assert.equal(plan.workflowPath, '.wren/workflows/recap.md');
+  assert.match(plan.prompt, /\/wren recap --title "Wren UX" preserve the command decision/);
   assert.match(plan.prompt, /User arguments for the workflow:/);
 });
 

@@ -48,7 +48,7 @@ temp/
 # Accidental Wren vault content in repo root
 /.wren/
 /wiki/
-/capture/
+/recap/
 
 # Extra OS/editor temp files
 Thumbs.db

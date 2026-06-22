@@ -40,18 +40,18 @@ test('runLint reports wiki pages missing sources and index coverage', async () =
   }
 });
 
-test('runLint reports empty capture notes', async () => {
+test('runLint reports empty recap notes', async () => {
   const root = await tempDir();
   try {
     await initWren(root, packageRoot);
-    await mkdir(path.join(root, 'capture'));
-    await writeFile(path.join(root, 'capture', 'empty.md'), '', 'utf8');
+    await mkdir(path.join(root, 'recap'));
+    await writeFile(path.join(root, 'recap', 'empty.md'), '', 'utf8');
 
     const report = await runLint(root);
 
     assert.equal(report.errors, 0);
     assert.equal(report.warnings, 1);
-    assert.ok(report.issues.some((issue) => issue.message === 'empty capture note: capture/empty.md'));
+    assert.ok(report.issues.some((issue) => issue.message === 'empty recap note: recap/empty.md'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -84,14 +84,14 @@ test('formatLintReport renders issues and summary', () => {
     warnings: 1,
     errors: 1,
     issues: [
-      { status: 'warn', message: 'empty capture note: capture/a.md' },
+      { status: 'warn', message: 'empty recap note: recap/a.md' },
       { status: 'error', message: 'wiki page missing sources: wiki/a.md' }
     ]
   });
 
   assert.match(output, /^Wren lint/);
   assert.match(output, /✓ checked 3 Markdown files/);
-  assert.match(output, /! empty capture note: capture\/a\.md/);
+  assert.match(output, /! empty recap note: recap\/a\.md/);
   assert.match(output, /✗ wiki page missing sources: wiki\/a\.md/);
   assert.match(output, /Result: 1 warning, 1 error/);
 });

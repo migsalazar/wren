@@ -186,7 +186,7 @@ async function collectIndexedFiles(
       area: 'source',
       files,
       warnings,
-      missingIsWarning: source.path !== config.areas.capture.path
+      missingIsWarning: source.path !== config.areas.recap.path
     });
   }
 

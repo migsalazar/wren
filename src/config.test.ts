@@ -19,7 +19,7 @@ test('loadConfig validates required Wren areas', async () => {
   try {
     await writeConfig(root, { version: 1, areas: {}, defaultWiki: 'default' });
 
-    await assert.rejects(loadConfig(root), /must define areas\.capture/);
+    await assert.rejects(loadConfig(root), /must define areas\.recap/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -31,10 +31,10 @@ test('loadConfig parses valid config', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
-      sources: [{ path: 'capture' }, { path: 'notes' }],
+      sources: [{ path: 'recap' }, { path: 'notes' }],
       useBm25: true,
       defaultWiki: 'default'
     });
@@ -42,9 +42,9 @@ test('loadConfig parses valid config', async () => {
     const config = await loadConfig(root);
 
     assert.equal(config.version, 1);
-    assert.equal(config.areas.capture.path, 'capture');
+    assert.equal(config.areas.recap.path, 'recap');
     assert.equal(config.areas.wiki.default.path, 'wiki');
-    assert.deepEqual(config.sources, [{ path: 'capture' }, { path: 'notes' }]);
+    assert.deepEqual(config.sources, [{ path: 'recap' }, { path: 'notes' }]);
     assert.equal(config.useBm25, true);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -57,13 +57,13 @@ test('loadConfig rejects unsafe configured paths', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: '../capture' },
+        recap: { path: '../recap' },
         wiki: { default: { path: 'wiki' } }
       },
       defaultWiki: 'default'
     });
 
-    await assert.rejects(loadConfig(root), /areas\.capture\.path must not contain "\.\."/);
+    await assert.rejects(loadConfig(root), /areas\.recap\.path must not contain "\.\."/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -75,7 +75,7 @@ test('loadConfig rejects absolute wiki paths', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: '/tmp/wiki' } }
       },
       defaultWiki: 'default'
@@ -93,31 +93,31 @@ test('loadConfig rejects paths with surrounding whitespace', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: ' capture' },
+        recap: { path: ' recap' },
         wiki: { default: { path: 'wiki' } }
       },
       defaultWiki: 'default'
     });
 
-    await assert.rejects(loadConfig(root), /areas\.capture\.path must not contain surrounding whitespace/);
+    await assert.rejects(loadConfig(root), /areas\.recap\.path must not contain surrounding whitespace/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test('loadConfig rejects overlapping capture and wiki paths', async () => {
+test('loadConfig rejects overlapping recap and wiki paths', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'wiki/capture' },
+        recap: { path: 'wiki/recap' },
         wiki: { default: { path: 'wiki' } }
       },
       defaultWiki: 'default'
     });
 
-    await assert.rejects(loadConfig(root), /areas\.capture\.path must not overlap areas\.wiki\.default\.path/);
+    await assert.rejects(loadConfig(root), /areas\.recap\.path must not overlap areas\.wiki\.default\.path/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -129,13 +129,13 @@ test('loadConfig rejects empty path segments', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture//daily' },
+        recap: { path: 'recap//daily' },
         wiki: { default: { path: 'wiki' } }
       },
       defaultWiki: 'default'
     });
 
-    await assert.rejects(loadConfig(root), /areas\.capture\.path must not contain empty path segments/);
+    await assert.rejects(loadConfig(root), /areas\.recap\.path must not contain empty path segments/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -147,7 +147,7 @@ test('loadConfig defaults missing useBm25 to false', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
       defaultWiki: 'default'
@@ -167,7 +167,7 @@ test('loadConfig rejects non-boolean useBm25', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
       useBm25: 'yes',
@@ -180,13 +180,13 @@ test('loadConfig rejects non-boolean useBm25', async () => {
   }
 });
 
-test('loadConfig defaults missing sources to the capture path', async () => {
+test('loadConfig defaults missing sources to the recap path', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
       defaultWiki: 'default'
@@ -194,7 +194,7 @@ test('loadConfig defaults missing sources to the capture path', async () => {
 
     const config = await loadConfig(root);
 
-    assert.deepEqual(config.sources, [{ path: 'capture' }]);
+    assert.deepEqual(config.sources, [{ path: 'recap' }]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -206,7 +206,7 @@ test('loadConfig rejects source paths that overlap wiki paths', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
       sources: [{ path: 'wiki' }],
@@ -225,7 +225,7 @@ test('loadConfig rejects hidden source paths', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
       sources: [{ path: '.obsidian' }],
@@ -244,7 +244,7 @@ test('loadConfig rejects duplicate source paths', async () => {
     await writeConfig(root, {
       version: 1,
       areas: {
-        capture: { path: 'capture' },
+        recap: { path: 'recap' },
         wiki: { default: { path: 'wiki' } }
       },
       sources: [{ path: 'notes' }, { path: 'notes' }],

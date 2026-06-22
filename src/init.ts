@@ -9,16 +9,16 @@ interface InitResult {
   configuredSources?: string[];
 }
 
-const DEFAULT_CAPTURE_PATH = 'capture';
+const DEFAULT_RECAP_PATH = 'recap';
 const DEFAULT_WIKI_NAME = 'default';
 const DEFAULT_WIKI_PATH = 'wiki';
 
 const TEMPLATE_FILES = [
-  { from: path.join('templates', '.wren', 'workflows', 'capture.md'), to: path.join('.wren', 'workflows', 'capture.md') },
+  { from: path.join('templates', '.wren', 'workflows', 'recap.md'), to: path.join('.wren', 'workflows', 'recap.md') },
   { from: path.join('templates', '.wren', 'workflows', 'recall.md'), to: path.join('.wren', 'workflows', 'recall.md') },
   { from: path.join('templates', '.wren', 'workflows', 'reflect.md'), to: path.join('.wren', 'workflows', 'reflect.md') },
   { from: path.join('templates', '.wren', 'workflows', 'lint.md'), to: path.join('.wren', 'workflows', 'lint.md') },
-  { from: path.join('templates', '.wren', 'templates', 'capture.md'), to: path.join('.wren', 'templates', 'capture.md') },
+  { from: path.join('templates', '.wren', 'templates', 'recap.md'), to: path.join('.wren', 'templates', 'recap.md') },
   { from: path.join('templates', '.wren', 'templates', 'wiki.md'), to: path.join('.wren', 'templates', 'wiki.md') },
   { from: path.join('templates', 'wiki', 'index.md'), to: path.join('wiki', 'index.md') },
   { from: path.join('templates', 'wiki', 'log.md'), to: path.join('wiki', 'log.md') },
@@ -66,7 +66,7 @@ export function formatInitResult(result: InitResult): string {
 
   lines.push('Next:');
   lines.push('  wren index');
-  lines.push('  Use /wren capture with a Wren agent adapter, or ask an agent to follow .wren/workflows/capture.md');
+  lines.push('  Use /wren recap with a Wren agent adapter, or ask an agent to follow .wren/workflows/recap.md');
   lines.push('  wren doctor');
 
   return lines.join('\n');
@@ -74,11 +74,11 @@ export function formatInitResult(result: InitResult): string {
 
 async function buildInitialConfig(rootDir: string): Promise<{ content: string; sources: string[] }> {
   const discoveredSources = await discoverTopLevelSourceFolders(rootDir, [DEFAULT_WIKI_PATH]);
-  const sources = uniquePaths([DEFAULT_CAPTURE_PATH, ...discoveredSources]);
+  const sources = uniquePaths([DEFAULT_RECAP_PATH, ...discoveredSources]);
   const config = {
     version: 1,
     areas: {
-      capture: { path: DEFAULT_CAPTURE_PATH },
+      recap: { path: DEFAULT_RECAP_PATH },
       wiki: { [DEFAULT_WIKI_NAME]: { path: DEFAULT_WIKI_PATH } }
     },
     sources: sources.map((sourcePath) => ({ path: sourcePath })),

@@ -2,7 +2,7 @@ import { appendFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ensureWrenCache, WREN_CACHE_PATH } from './cache.js';
 
-export type MetricEvent = 'recall' | 'reflect' | 'capture' | 'search';
+export type MetricEvent = 'recall' | 'reflect' | 'recap' | 'search';
 export type MetricArea = 'wiki' | 'sources' | 'all';
 
 export interface MetricOptions {
@@ -31,7 +31,7 @@ interface MetricLine {
   area?: MetricArea;
 }
 
-const METRIC_EVENTS: MetricEvent[] = ['recall', 'reflect', 'capture', 'search'];
+const METRIC_EVENTS: MetricEvent[] = ['recall', 'reflect', 'recap', 'search'];
 const METRIC_AREAS: MetricArea[] = ['wiki', 'sources', 'all'];
 
 export const METRICS_PATH = path.join(WREN_CACHE_PATH, 'metrics.jsonl');

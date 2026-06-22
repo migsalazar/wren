@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { capture } from './capture.js';
+import { recap } from './recap.js';
 import { loadConfig } from './config.js';
 import { formatDoctorReport, runDoctor } from './doctor.js';
 import { formatInitResult, initWren } from './init.js';
@@ -26,12 +26,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (command === 'capture') {
+  if (command === 'recap') {
     const title = readOption(args, '--title') ?? readOption(args, '-t');
     const tags = readOptions(args, '--tag');
     const body = hasOption(args, '--stdin') ? await readStdin() : undefined;
-    const createdPath = await capture(rootDir, { title, tags, body });
-    console.log(`Created capture: ${createdPath}`);
+    const createdPath = await recap(rootDir, { title, tags, body });
+    console.log(`Created recap: ${createdPath}`);
     return;
   }
 
@@ -159,7 +159,7 @@ function printHelp(): void {
 
 Commands:
   init                 Create Wren scaffold files if missing
-  capture              Create a capture note from the template
+  recap                Create a recap note from the template
   doctor               Diagnose Wren vault setup
   index                Build the local BM25 search index
   search <query>       Search the local BM25 index
@@ -167,14 +167,14 @@ Commands:
   lint                 Check Wren content health
 
 Options:
-  capture --title, -t  Optional capture title
-  capture --tag        Optional tag, repeatable
-  capture --stdin      Read capture body from stdin
+  recap --title, -t    Optional recap title
+  recap --tag          Optional tag, repeatable
+  recap --stdin        Read recap body from stdin
   search --area        wiki, sources, or all (default: all)
   search --limit, -n   Maximum results (default: 10)
   search --json        Print JSON output
   metric --stdin       Read metric JSON object from stdin
-  metric --event       recall, reflect, capture, or search
+  metric --event       recall, reflect, recap, or search
   metric --query       Optional query string
   metric --read        Optional file read path, repeatable
   metric --write       Optional file written path, repeatable

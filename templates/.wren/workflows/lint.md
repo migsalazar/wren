@@ -5,7 +5,7 @@ Inspect Wren vault health and report deterministic issues.
 ## Rules
 
 - Read `.wren/config.json` first.
-- Inspect configured capture and wiki areas by default.
+- Inspect configured recap and wiki areas by default.
 - Inspect configured source folders only when a check covers sources or the user asks.
 - Inspect outside configured Wren areas/sources only when the user explicitly provides files or paths.
 - Do not silently rewrite notes.
@@ -18,7 +18,7 @@ Run available deterministic checks, such as `wren doctor` and `wren lint`. Repor
 
 - missing Wren scaffold files
 - broken markdown links or wikilinks
-- empty capture notes or wiki pages
+- empty recap notes or wiki pages
 - wiki synthesis pages without `## Sources`, excluding `index.md` and `log.md`
 - wiki synthesis pages missing from `wiki/index.md`, excluding `index.md` and `log.md`
 
