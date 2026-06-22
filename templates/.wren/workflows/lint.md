@@ -1,40 +1,33 @@
 # Wren Workflow: /wren lint
 
-Use this workflow when the user invokes `/wren lint` inside a Wren vault.
-
-## Purpose
-
-Inspect Wren vault health and note hygiene. Report issues clearly and propose deterministic fixes when appropriate.
-
-Lint is primarily read-only unless the user explicitly approves a fix.
+Inspect Wren vault health and report deterministic issues.
 
 ## Rules
 
-- Read `.wren/config.json` before linting.
+- Read `.wren/config.json` first.
 - Inspect configured capture and wiki areas by default.
-- Inspect configured source folders only when a check explicitly covers sources or the user asks.
-- Do not inspect outside configured Wren areas or configured sources unless the user explicitly provides additional files or paths for the current task.
+- Inspect configured source folders only when a check covers sources or the user asks.
+- Inspect outside configured Wren areas/sources only when the user explicitly provides files or paths.
 - Do not silently rewrite notes.
 - Do not modify non-Wren notes except through explicit, deterministic, approved fixes.
-- Prefer reports and proposals over automatic changes.
-- Keep semantic judgments separate from deterministic findings.
+- Keep deterministic findings separate from semantic judgments.
 
-## Possible Checks
+## Checks
+
+Run available deterministic checks, such as `wren doctor` and `wren lint`. Report supported findings including:
 
 - missing Wren scaffold files
 - broken markdown links or wikilinks
-- empty notes
-- notes without title headings
-- notes without tags, if tags become required
-- duplicate titles
-- very short notes that may need review
-- wiki pages without `## Sources`
-- wiki pages missing from the wiki index
+- empty capture notes or wiki pages
+- wiki synthesis pages without `## Sources`, excluding `index.md` and `log.md`
+- wiki synthesis pages missing from `wiki/index.md`, excluding `index.md` and `log.md`
 
-## Suggested Procedure
+If doing manual or future checks, label them clearly; examples include duplicate titles, missing title headings, very short notes, or tag hygiene.
 
-1. Run deterministic checks where available, such as `wren doctor` and `wren lint`.
-2. Inspect relevant files only as needed.
-3. Report findings grouped by severity.
-4. For fixable issues, propose exact deterministic changes.
-5. Wait for user approval before modifying files.
+## Steps
+
+1. Run deterministic checks where available.
+2. Inspect only the files needed to explain findings.
+3. Report findings by severity.
+4. Propose exact deterministic fixes when useful.
+5. Wait for approval before modifying files.

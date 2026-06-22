@@ -1,46 +1,64 @@
 # Wren Workflow: /wren reflect
 
-Use this workflow when the user invokes `/wren reflect` inside a Wren vault.
-
-## Purpose
-
-Turn configured source notes into wiki synthesis.
-
-Reflection maintains what Wren understands. It is deeper than capture and should remain traceable to evidence. Capture notes are ordinary source notes when they are listed in `sources`, not the privileged source of truth.
+Turn configured source notes into source-linked wiki synthesis.
 
 ## Rules
 
-- Read `.wren/config.json` before reflecting.
+- Read `.wren/config.json` first.
 - Use configured `sources` as the default evidence scope.
 - Treat capture notes as ordinary source evidence when the capture path is listed in `sources`.
-- If the user provides note files or folders outside configured `sources`, treat them as explicitly provided evidence for the current task.
-- Do not read outside configured `sources` unless the user explicitly provides additional files or paths for the current task.
-- Search before reading broadly; prefer a narrow set of relevant source files.
+- Read configured wiki areas and `sources` as needed; read outside them only when the user explicitly provides files or paths.
+- Search before reading broadly; prefer narrow, relevant source files.
 - Write synthesis only to configured wiki workspaces.
-- Do not rewrite source notes or capture notes unless the user explicitly asks.
-- Generated wiki synthesis pages require a `## Sources` section that cites source notes.
-- Keep `wiki/index.md` as the content-oriented catalog of wiki pages: link, one-line summary, and useful category/metadata.
-- Update `wiki/index.md` on every wiki page creation or meaningful wiki page change.
-- Append meaningful activity to `wiki/log.md`; do not rewrite prior log entries.
-- Use parseable log headings: `## [YYYY-MM-DD] reflect | Title`.
-- Show proposed wiki changes, index changes, and log entry before writing; wait for approval.
-- Do not report "no changes" without listing what evidence was searched or read and why no wiki update is warranted.
+- Do not rewrite source notes or capture notes unless explicitly asked.
+- Generated wiki synthesis pages require `## Sources` with source-note citations.
+- Do not create or switch git branches as part of Wren.
+- Before writing, determine whether the vault is inside a git repository.
+- Git-backed vault: apply clear, minimal wiki/index/log changes directly.
+- Non-git vault: show proposed wiki, index, and log changes, then wait for explicit approval.
+- Ask before destructive or unusual changes: deleting pages, renaming pages, rewriting large unrelated sections, or writing outside configured wiki workspaces.
+- Do not report "no changes" without listing searched/read evidence and why no update is warranted.
+- If `useBm25` is true and wiki files changed, ensure the search index is refreshed; report if it may be stale.
 
-## Suggested Procedure
+## Wiki Index
 
-1. Identify the relevant wiki workspace and configured source folders.
-2. Search or read relevant notes from configured `sources`, or from explicitly provided evidence paths.
-3. Extract claims, questions, patterns, decisions, and tensions.
-4. Draft wiki updates with source links. For new wiki pages, use `.wren/templates/wiki.md` as the editable structure and render useful tags through the `{{tags}}` placeholder as Markdown tags.
-5. Draft corresponding `wiki/index.md` updates for every created or meaningfully changed wiki page.
-6. Draft a concise `wiki/log.md` entry using `## [YYYY-MM-DD] reflect | Title`.
-7. Update or create synthesis pages, the index, and the log only after approval.
+Keep `wiki/index.md` as a concise content catalog. Use this structure unless category sections are more useful:
+
+```md
+# Wren Index
+
+## Wiki Pages
+
+- [[page-name]] — one-line summary.
+```
+
+- Remove old scaffold prose or empty-state placeholders during the next meaningful update.
+- Preserve real catalog entries.
+- Update the index when wiki pages are created or meaningfully changed.
+
+## Wiki Log
+
+- Keep `wiki/log.md` concise and append-only.
+- Remove old scaffold prose or empty-state placeholders during the next meaningful update.
+- Preserve real log entries.
+- Append meaningful activity using `## [YYYY-MM-DD] reflect | Title`.
+
+## Steps
+
+1. Identify the relevant wiki workspace and configured sources.
+2. Determine git-backed vs non-git write policy.
+3. Search or read relevant source evidence.
+4. Extract claims, questions, patterns, decisions, and tensions.
+5. Draft wiki updates with source links; use `.wren/templates/wiki.md` for new pages.
+6. Draft corresponding `wiki/index.md` and `wiki/log.md` updates.
+7. Ask approval only when required by the rules.
+8. Write wiki, index, and log changes.
+9. Ensure BM25 is refreshed when enabled and wiki files changed.
 
 ## Output
 
-Report:
-
-- files read as sources
+- source files read
 - wiki files changed
 - key synthesis added
 - unresolved questions or risks
+- index refresh status, when relevant

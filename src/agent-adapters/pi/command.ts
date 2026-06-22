@@ -83,9 +83,9 @@ Usage:
   /wren init
 
 Workflow commands:
-  capture   Follow .wren/workflows/capture.md and propose a capture note.
+  capture   Follow .wren/workflows/capture.md and write a capture note.
   recall    Follow .wren/workflows/recall.md and recover relevant context.
-  reflect   Follow .wren/workflows/reflect.md and propose wiki synthesis updates.
+  reflect   Follow .wren/workflows/reflect.md and update wiki synthesis.
   lint      Follow .wren/workflows/lint.md and report health issues.
 
 CLI helper commands:
@@ -112,11 +112,11 @@ function buildWorkflowPrompt(command: WrenWorkflowCommand, argsText: string): st
     'Required steps:',
     '1. Read `.wren/config.json` before doing Wren work.',
     `2. Read \`${workflowPath}\`.`,
-    '3. Follow that workflow file as the source of truth for behavior, evidence, source scope, and approval/write boundaries.',
+    '3. Follow that workflow file as the source of truth for behavior, evidence, source scope, and write policy.',
     '',
     'Important boundaries:',
     '- This adapter is only the front door; do not replace the workflow with hardcoded behavior from this prompt.',
-    '- Do not modify files unless the workflow permits it and the user explicitly approves the proposed changes.',
+    '- Modify files only when the workflow permits it, and follow the workflow approval policy for git-backed versus non-git workspaces.',
     '- If `.wren/config.json` or the workflow file is missing, explain that the Wren scaffold is incomplete and suggest running `wren init`.'
   ];
 

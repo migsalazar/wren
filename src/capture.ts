@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { loadConfig } from './config.js';
 import { pathExists, readText, toPosixPath } from './files.js';
+import { buildAndWriteSearchIndex } from './search-index.js';
 
 interface CaptureOptions {
   title?: string;
@@ -27,6 +28,7 @@ export async function capture(rootDir: string, options: CaptureOptions): Promise
   const capturePath = path.join(rootDir, config.areas.capture.path, filename);
   await mkdir(path.dirname(capturePath), { recursive: true });
   await writeFile(capturePath, content, 'utf8');
+  if (config.useBm25) await buildAndWriteSearchIndex(rootDir, config);
 
   return toPosixPath(path.relative(rootDir, capturePath));
 }

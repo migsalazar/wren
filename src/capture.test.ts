@@ -82,6 +82,22 @@ test('capture uses the vault-local editable capture template', async () => {
   }
 });
 
+test('capture refreshes the BM25 search index when enabled', async () => {
+  const root = await tempDir();
+  try {
+    await initWren(root, packageRoot);
+
+    const createdPath = await capture(root, { title: 'Indexed Capture', body: 'Searchable capture body.' });
+    const index = JSON.parse(await readFile(path.join(root, '.wren', 'cache', 'search-index.json'), 'utf8')) as {
+      documents: Array<{ path: string }>;
+    };
+
+    assert.ok(index.documents.some((document) => document.path === createdPath));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 async function tempDir(): Promise<string> {
   return mkdtemp(path.join(os.tmpdir(), 'wren-capture-test-'));
 }
