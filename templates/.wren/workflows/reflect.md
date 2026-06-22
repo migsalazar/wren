@@ -18,7 +18,7 @@ Turn configured source notes into source-linked wiki synthesis.
 - Non-git vault: show proposed wiki, index, and log changes, then wait for explicit approval.
 - Ask before destructive or unusual changes: deleting pages, renaming pages, rewriting large unrelated sections, or writing outside configured wiki workspaces.
 - Do not report "no changes" without listing searched/read evidence and why no update is warranted.
-- If `useBm25` is true and wiki files changed, run `wren index`; report if the index may be stale.
+- If `useBm25` is true and wiki files changed, ensure the search index is refreshed; report if it may be stale.
 
 ## Wiki Index
 
@@ -53,7 +53,7 @@ Keep `wiki/index.md` as a concise content catalog. Use this structure unless cat
 6. Draft corresponding `wiki/index.md` and `wiki/log.md` updates.
 7. Ask approval only when required by the rules.
 8. Write wiki, index, and log changes.
-9. Refresh BM25 when enabled and wiki files changed.
+9. Ensure BM25 is refreshed when enabled and wiki files changed.
 
 ## Output
 

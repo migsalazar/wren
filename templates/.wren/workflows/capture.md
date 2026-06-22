@@ -19,7 +19,7 @@ The user may provide a title, tags, or preservation instructions. If missing, ch
 - Git-backed vault: write directly.
 - Non-git vault: show target path and proposed content, then wait for explicit approval.
 - If the capture area does not exist, report that Wren created it or include that fact in the non-git approval prompt.
-- If `useBm25` is true, run `wren index` after writing; report if the index may be stale.
+- If `useBm25` is true, ensure the search index is refreshed after writing; report if it may be stale.
 
 ## Steps
 
@@ -28,5 +28,5 @@ The user may provide a title, tags, or preservation instructions. If missing, ch
 3. Draft the note from `.wren/templates/capture.md`.
 4. Ask approval only when required by the rules.
 5. Write the capture note.
-6. Refresh BM25 when enabled.
+6. Ensure BM25 is refreshed when enabled.
 7. Report the created path and any index warning.

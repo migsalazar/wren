@@ -17,10 +17,11 @@ If the host does not expose `/wren`, treat those strings or named Wren requests 
 
 - Configured Wren areas and source folders live in `.wren/config.json`.
 - Read configured wiki areas and `sources` as needed; read outside them only when the user explicitly provides files or paths.
-- Write only configured Wren areas and `.wren/` protocol/cache files.
+- Write only configured Wren areas and derived `.wren/cache/` files during normal workflows.
+- Edit `.wren/config.json`, workflows, or templates only when explicitly asked.
 - Do not rewrite existing notes unless explicitly asked.
 - Do not create or switch git branches as part of Wren.
-- For configured-area writes: write directly in git-backed vaults; ask approval first in non-git vaults.
+- For agent workflow writes: write directly in git-backed vaults; ask approval first in non-git vaults. Direct CLI commands execute as requested.
 - Search before reading broadly; prefer narrow, relevant files.
 - If `useBm25` is true, `/wren recall` may use `wren search`; if false, do not use it.
 

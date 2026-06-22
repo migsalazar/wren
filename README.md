@@ -76,7 +76,7 @@ Workflow summary:
 - `/wren reflect`: update source-linked wiki synthesis, `wiki/index.md`, and `wiki/log.md`; refresh BM25 when enabled.
 - `/wren lint`: report Wren workspace health issues without silent rewrites.
 
-Configured-area writes happen directly in git-backed vaults. In non-git vaults, Wren asks before writing. Wren also asks before destructive, unusual, or out-of-boundary changes. Wren does not create or switch git branches.
+Agent workflow writes happen directly in git-backed vaults. In non-git vaults, Wren asks before writing. Direct CLI commands execute as requested. Wren also asks before destructive, unusual, or out-of-boundary changes. Wren does not create or switch git branches.
 
 ## Core Model
 
@@ -90,6 +90,7 @@ wiki workspace            -> source-linked synthesis
 - Recall and reflect read configured `sources`, plus files or folders the user explicitly provides.
 - `/wren capture` writes only capture notes and derived `.wren/cache/` search-index files.
 - `/wren reflect` writes only configured wiki workspaces and derived `.wren/cache/` search-index files.
+- Wren edits `.wren/config.json`, workflows, or templates only when explicitly requested.
 - Wren does not automatically synthesize notes; invoke `/wren reflect` when source notes should enter the wiki.
 
 ## Wiki Index and Log
