@@ -66,8 +66,10 @@ With the Pi adapter installed, helper commands are also available:
 
 Typical flows:
 
-- Capture: discuss something with an agent, invoke `/wren capture`, review the proposed note, then approve the write.
-- Reflect: review configured `sources`, invoke `/wren reflect`, review the proposed wiki updates and source links, then approve the write.
+- Capture: discuss something with an agent, then invoke `/wren capture`; Wren writes a source note to the configured capture area and refreshes BM25 when enabled.
+- Reflect: invoke `/wren reflect`; Wren applies minimal source-linked wiki/index/log updates and refreshes BM25 when enabled.
+
+In git-backed vaults, configured-area writes happen directly. In non-git vaults, Wren asks before writing. Wren also asks before destructive, unusual, or out-of-boundary changes.
 
 Wren does not automatically synthesize notes. Use `/wren reflect` to introduce configured source notes into Wren's wiki synthesis.
 
@@ -91,7 +93,7 @@ wiki workspace            -> source-linked synthesis
 .wren/                    -> protocol, config, and templates
 ```
 
-Capture notes are ordinary source notes when the capture path is listed in `sources`. During recall and reflection, Wren reads configured `sources` plus files or folders the user explicitly provides. Writes stay constrained: `/wren capture` writes to the configured capture area, and `/wren reflect` writes to configured wiki workspaces after approval.
+Capture notes are ordinary source notes when the capture path is listed in `sources`. During recall and reflection, Wren reads configured `sources` plus files or folders the user explicitly provides. Writes stay constrained: `/wren capture` writes to the configured capture area, `/wren reflect` writes to configured wiki workspaces, and BM25 refreshes write only derived `.wren/cache/` files. Wren asks before writing only for non-git vaults or destructive, unusual, or out-of-boundary changes.
 
 ## Local Protocol Files
 
@@ -112,16 +114,16 @@ The generated `AGENTS.md` maps workflow requests to `.wren/workflows/*.md`. Temp
 
 ## Wiki Index and Log
 
-- `wiki/index.md` catalogs wiki pages with links, summaries, and useful categories. Recall reads it first.
+- `wiki/index.md` catalogs wiki pages with links and one-line summaries, grouped only when useful. Recall reads it first.
 - `wiki/log.md` is append-only and chronological, with headings like `## [YYYY-MM-DD] reflect | Title`.
 
-Reflect should update `wiki/index.md` for meaningful wiki changes and append a concise entry to `wiki/log.md`.
+These are productive files, not instruction templates. Reflect should keep them concise, update `wiki/index.md` for meaningful wiki changes, and append a concise entry to `wiki/log.md`.
 
 ## Workflows
 
 ### `/wren capture`
 
-Summarize the current agent discussion into a source-level capture note. Capture preserves summary, assumptions, disagreements or tensions, and Markdown tags; it writes only after approval.
+Summarize the current agent discussion into a source-level capture note. Capture preserves summary, assumptions, disagreements or tensions, and Markdown tags. In git-backed vaults it writes directly to the configured capture area; in non-git vaults it asks first. When BM25 is enabled, capture refreshes the search index after writing.
 
 ### `/wren recall`
 
@@ -129,7 +131,7 @@ Recover relevant context and relate it to the current discussion. Recall reads t
 
 ### `/wren reflect`
 
-Turn configured source notes into source-linked wiki synthesis. Generated wiki pages require `## Sources`; meaningful changes should also update `wiki/index.md` and `wiki/log.md`.
+Turn configured source notes into source-linked wiki synthesis. Generated wiki pages require `## Sources`; meaningful changes also update `wiki/index.md` and `wiki/log.md`. In git-backed vaults reflect applies minimal changes directly; in non-git vaults it asks first.
 
 ### `/wren lint`
 
@@ -154,7 +156,7 @@ wren capture --title "Discussion title" --tag wren --stdin
 wren lint
 ```
 
-`wren index` builds `.wren/cache/search-index.json`; `wren search` returns ranked, line-numbered snippets. `wren capture --stdin` uses the local `.wren/templates/capture.md` template.
+`wren index` builds `.wren/cache/search-index.json`; `wren search` returns ranked, line-numbered snippets. `wren capture --stdin` uses the local `.wren/templates/capture.md` template and refreshes the search index when BM25 is enabled.
 
 ## Development
 
