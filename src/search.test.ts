@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { CONFIG_PATH, loadConfig } from './config.js';
+import { initWren } from './init.js';
 import {
   buildAndWriteSearchIndex,
   formatIndexReport,
@@ -80,6 +81,42 @@ test('runSearch supports direct tag matches and shared-tag related matches', asy
   }
 });
 
+test('runSearch preserves golden BM25 ranking cases', async () => {
+  const root = await goldenSearchFixtureVault();
+  try {
+    await initWren(root, process.cwd());
+    await buildAndWriteSearchIndex(root, await loadConfig(root));
+
+    const cases: Array<{ query: string; expectedPaths: string[]; bm25Only?: boolean }> = [
+      { query: 'fermentation', expectedPaths: ['notes/fermentation-guide.md', 'notes/winter-meal-plan.md'] },
+      { query: 'basil irrigation', expectedPaths: ['notes/basil-irrigation.md'] },
+      { query: 'red ochre pigment', expectedPaths: ['notes/watercolor-palette.md'] },
+      { query: 'solar inverter battery', expectedPaths: ['notes/solar-battery.md'] },
+      { query: 'roadmap launch', expectedPaths: ['notes/product-roadmap.md'] },
+      {
+        query: 'lantern',
+        expectedPaths: ['notes/body-frequency-rich.md', 'notes/body-frequency-sparse.md'],
+        bm25Only: true
+      }
+    ];
+
+    for (const { query, expectedPaths, bm25Only } of cases) {
+      const report = await runSearch(root, { query, area: 'sources', limit: 5 });
+      const topResults = report.results.slice(0, expectedPaths.length);
+      const topPaths = topResults.map((result) => result.path);
+
+      assert.deepEqual(topPaths, expectedPaths, `query "${query}" should preserve golden ranking`);
+      if (bm25Only) {
+        for (const result of topResults) {
+          assert.deepEqual(result.matched, ['bm25'], `query "${query}" should rank ${result.path} with BM25 only`);
+        }
+      }
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('runSearch requires an existing search index', async () => {
   const root = await fixtureVault();
   try {
@@ -103,6 +140,95 @@ test('formatIndexReport and formatSearchReport render agent-readable output', as
     await rm(root, { recursive: true, force: true });
   }
 });
+
+async function goldenSearchFixtureVault(): Promise<string> {
+  const root = await tempDir();
+  await mkdir(path.join(root, 'notes'), { recursive: true });
+
+  await writeFile(
+    path.join(root, 'notes', 'fermentation-guide.md'),
+    [
+      '# Fermentation Guide',
+      '',
+      'Fermentation keeps a sourdough starter active and controls kimchi brine.',
+      'Fermentation fermentation starter brine lactobacillus jar salt temperature.',
+      'Use regular burping schedules for fermented vegetables.'
+    ].join('\n'),
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'notes', 'winter-meal-plan.md'),
+    [
+      '# Winter Meal Plan',
+      '',
+      'Plan soup, lentils, rice, and roasted carrots for the week.',
+      'This grocery list mentions fermentation once as a possible pickle side dish.'
+    ].join('\n'),
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'notes', 'basil-irrigation.md'),
+    [
+      '# Basil Irrigation',
+      '',
+      'Basil seedlings need drip irrigation, moist soil, and morning watering.',
+      'A greenhouse tray uses capillary mats and nutrient checks.'
+    ].join('\n'),
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'notes', 'watercolor-palette.md'),
+    [
+      '# Watercolor Palette',
+      '',
+      'Red ochre pigment granulates beside ultramarine and raw sienna.',
+      'Mix transparent washes for shadow studies and plein air sketches.'
+    ].join('\n'),
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'notes', 'solar-battery.md'),
+    [
+      '# Solar Battery Sizing',
+      '',
+      'Solar inverter battery sizing depends on amp hours, panel watts, and reserve capacity.',
+      'Track daily load before choosing a charge controller.'
+    ].join('\n'),
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'notes', 'product-roadmap.md'),
+    [
+      '# Product Roadmap',
+      '',
+      'Roadmap planning schedules the beta launch, onboarding checklist, and release notes.',
+      'The launch decision uses support readiness and documentation coverage.'
+    ].join('\n'),
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'notes', 'body-frequency-rich.md'),
+    [
+      '# Harbor Notebook',
+      '',
+      'Lantern placement guides evening checks, lantern fuel rotation, and lantern wick trimming.',
+      'Crews log lantern battery swaps before docking, and a final lantern audit keeps the walkway visible.'
+    ].join('\n'),
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'notes', 'body-frequency-sparse.md'),
+    [
+      '# Orchard Notebook',
+      '',
+      'Lantern placement appears in the seasonal checklist while crews review gate latches, water barrels, path markers,',
+      'supply bins, route maps, radio handoffs, and weather notes before dusk.'
+    ].join('\n'),
+    'utf8'
+  );
+
+  return root;
+}
 
 async function fixtureVault(): Promise<string> {
   const root = await tempDir();
