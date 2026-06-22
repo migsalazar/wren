@@ -6,6 +6,7 @@ import { loadConfig } from './config.js';
 import { formatDoctorReport, runDoctor } from './doctor.js';
 import { formatInitResult, initWren } from './init.js';
 import { formatLintReport, runLint } from './lint.js';
+import { appendMetric, resolveMetricInput } from './metric.js';
 import { buildAndWriteSearchIndex, formatIndexReport, formatSearchReport, runSearch, SearchArea } from './search.js';
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -57,6 +58,31 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (command === 'metric') {
+    const stdin = hasOption(args, '--stdin') ? await readStdin() : undefined;
+    const event = readOption(args, '--event');
+    const query = readOption(args, '--query');
+    const filesRead = readOptions(args, '--read');
+    const filesWritten = readOptions(args, '--write');
+    const area = readOption(args, '--area');
+    const unexpected = readPositionals(args, new Set(['--event', '--query', '--read', '--write', '--area']))[0];
+    if (unexpected) throw new Error(`Unexpected metric argument: ${unexpected}. Repeat --read or --write for multiple paths.`);
+
+    const metricPath = await appendMetric(
+      rootDir,
+      resolveMetricInput({
+        stdin,
+        event,
+        query,
+        filesRead,
+        filesWritten,
+        area
+      })
+    );
+    console.log(`Logged metric: ${metricPath}`);
+    return;
+  }
+
   if (command === 'lint') {
     const report = await runLint(rootDir);
     console.log(formatLintReport(report));
@@ -88,9 +114,8 @@ function hasOption(args: string[], name: string): boolean {
   return args.includes(name);
 }
 
-function readPositionals(args: string[]): string[] {
+function readPositionals(args: string[], optionsWithValues = new Set(['--area', '--limit', '-n'])): string[] {
   const values: string[] = [];
-  const optionsWithValues = new Set(['--area', '--limit', '-n']);
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -138,6 +163,7 @@ Commands:
   doctor               Diagnose Wren vault setup
   index                Build the local BM25 search index
   search <query>       Search the local BM25 index
+  metric               Append a local workflow metric event
   lint                 Check Wren content health
 
 Options:
@@ -147,6 +173,12 @@ Options:
   search --area        wiki, sources, or all (default: all)
   search --limit, -n   Maximum results (default: 10)
   search --json        Print JSON output
+  metric --stdin       Read metric JSON object from stdin
+  metric --event       recall, reflect, capture, or search
+  metric --query       Optional query string
+  metric --read        Optional file read path, repeatable
+  metric --write       Optional file written path, repeatable
+  metric --area        wiki, sources, or all
 `);
 }
 

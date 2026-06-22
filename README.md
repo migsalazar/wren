@@ -72,8 +72,8 @@ With the Pi adapter installed:
 Workflow summary:
 
 - `/wren capture`: write a source-level conversation note to the configured capture area; refresh BM25 when enabled.
-- `/wren recall`: read the wiki index first, then relevant wiki pages and source evidence as needed.
-- `/wren reflect`: update source-linked wiki synthesis, `wiki/index.md`, and `wiki/log.md`; refresh BM25 when enabled.
+- `/wren recall`: read the wiki index first, then relevant wiki pages and source evidence as needed; log path/query-only metrics locally.
+- `/wren reflect`: update source-linked wiki synthesis, `wiki/index.md`, and `wiki/log.md`; log path-only metrics and refresh BM25 when enabled.
 - `/wren lint`: report Wren workspace health issues without silent rewrites.
 
 Agent workflow writes happen directly in git-backed vaults. In non-git vaults, Wren asks before writing. Direct CLI commands execute as requested. Wren also asks before destructive, unusual, or out-of-boundary changes. Wren does not create or switch git branches.
@@ -88,8 +88,9 @@ wiki workspace            -> source-linked synthesis
 
 - Capture notes are ordinary source notes when the capture path is listed in `sources`.
 - Recall and reflect read configured `sources`, plus files or folders the user explicitly provides.
-- `/wren capture` writes only capture notes and derived `.wren/cache/` search-index files.
-- `/wren reflect` writes only configured wiki workspaces and derived `.wren/cache/` search-index files.
+- `/wren capture` writes only capture notes and derived `.wren/cache/` files.
+- `/wren recall` may append path/query-only metrics to `.wren/cache/metrics.jsonl`.
+- `/wren reflect` writes only configured wiki workspaces and derived `.wren/cache/` files.
 - Wren edits `.wren/config.json`, workflows, or templates only when explicitly requested.
 - Wren does not automatically synthesize notes; invoke `/wren reflect` when source notes should enter the wiki.
 
@@ -108,12 +109,14 @@ wren index
 wren search "query" --area all --limit 10
 wren doctor
 wren capture --title "Discussion title" --tag wren --stdin
+wren metric --event recall --query "query" --read wiki/page.md
 wren lint
 ```
 
 - `wren index` builds `.wren/cache/search-index.json`.
 - `wren search` returns ranked, line-numbered snippets.
 - `wren capture --stdin` uses `.wren/templates/capture.md` and refreshes BM25 when enabled.
+- `wren metric` appends local, git-ignored JSONL events to `.wren/cache/metrics.jsonl`.
 - `wren doctor` reports setup, source, and search-index issues.
 - `wren lint` reports structure/link/source issues.
 
