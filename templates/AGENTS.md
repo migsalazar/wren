@@ -11,13 +11,18 @@ When the user invokes Wren, read and follow the matching local workflow:
 - `/wren reflect` -> `.wren/workflows/reflect.md`
 - `/wren lint` -> `.wren/workflows/lint.md`
 
-If the host does not expose `/wren`, treat those strings or named Wren requests as workflow requests. If a workflow file is missing, say the scaffold is incomplete and suggest `wren init`.
+### Routing Rules
+
+- Run Wren workflows only when the user explicitly invokes `/wren <command>`, `wren <command>`, or clearly asks to use Wren.
+- Treat ordinary conversational uses of “recap”, “recall”, “reflect”, or “lint” as normal requests, not Wren workflow requests.
+- If a workflow file is missing, say the scaffold is incomplete and suggest `wren init`.
 
 ## Boundaries
 
 - Configured Wren areas and source folders live in `.wren/config.json`.
 - Read configured wiki areas and `sources` as needed; read outside them only when the user explicitly provides files or paths.
 - Write only configured Wren areas and derived `.wren/cache/` files during normal workflows.
+- Create or save recap notes, update wiki synthesis, or perform other Wren workflow writes only when the user explicitly invokes the relevant Wren command or clearly asks to use Wren.
 - Edit `.wren/config.json`, workflows, or templates only when explicitly asked.
 - Do not rewrite existing notes unless explicitly asked.
 - Do not create or switch git branches as part of Wren.
