@@ -4,52 +4,52 @@ import { loadConfig } from './config.js';
 import { pathExists, readText, toPosixPath } from './files.js';
 import { buildAndWriteSearchIndex } from './search-index.js';
 
-interface CaptureOptions {
+interface RecapOptions {
   title?: string;
   body?: string;
   tags?: string[];
 }
 
-const CAPTURE_TEMPLATE_PATH = path.join('.wren', 'templates', 'capture.md');
+const RECAP_TEMPLATE_PATH = path.join('.wren', 'templates', 'recap.md');
 
-export async function capture(rootDir: string, options: CaptureOptions): Promise<string> {
+export async function recap(rootDir: string, options: RecapOptions): Promise<string> {
   const config = await loadConfig(rootDir);
   const now = new Date();
-  const title = options.title?.trim() || 'Capture';
+  const title = options.title?.trim() || 'Recap';
   const date = formatDate(now);
-  const filename = await nextCaptureFilename(rootDir, config.areas.capture.path, now, title);
-  const template = await readCaptureTemplate(rootDir);
+  const filename = await nextRecapFilename(rootDir, config.areas.recap.path, now, title);
+  const template = await readRecapTemplate(rootDir);
   const content = template
     .replaceAll('{{title}}', title)
     .replaceAll('{{date}}', date)
     .replaceAll('{{body}}', formatBody(options.body))
     .replaceAll('{{tags}}', formatTags(options.tags));
 
-  const capturePath = path.join(rootDir, config.areas.capture.path, filename);
-  await mkdir(path.dirname(capturePath), { recursive: true });
-  await writeFile(capturePath, content, 'utf8');
+  const recapPath = path.join(rootDir, config.areas.recap.path, filename);
+  await mkdir(path.dirname(recapPath), { recursive: true });
+  await writeFile(recapPath, content, 'utf8');
   if (config.useBm25) await buildAndWriteSearchIndex(rootDir, config);
 
-  return toPosixPath(path.relative(rootDir, capturePath));
+  return toPosixPath(path.relative(rootDir, recapPath));
 }
 
-async function readCaptureTemplate(rootDir: string): Promise<string> {
+async function readRecapTemplate(rootDir: string): Promise<string> {
   try {
-    return await readText(path.join(rootDir, CAPTURE_TEMPLATE_PATH));
+    return await readText(path.join(rootDir, RECAP_TEMPLATE_PATH));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      throw new Error(`No ${CAPTURE_TEMPLATE_PATH} found. Run: wren init`);
+      throw new Error(`No ${RECAP_TEMPLATE_PATH} found. Run: wren init`);
     }
     throw error;
   }
 }
 
-async function nextCaptureFilename(rootDir: string, captureDir: string, date: Date, title: string): Promise<string> {
-  const base = `${formatDate(date)}-${formatTime(date)}-${slugify(title) || 'capture'}`;
+async function nextRecapFilename(rootDir: string, recapDir: string, date: Date, title: string): Promise<string> {
+  const base = `${formatDate(date)}-${formatTime(date)}-${slugify(title) || 'recap'}`;
   let candidate = `${base}.md`;
   let counter = 2;
 
-  while (await pathExists(path.join(rootDir, captureDir, candidate))) {
+  while (await pathExists(path.join(rootDir, recapDir, candidate))) {
     candidate = `${base}-${counter}.md`;
     counter += 1;
   }

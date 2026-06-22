@@ -4,9 +4,9 @@ Status: Accepted
 
 ## Context
 
-Wren needs a small measurement primitive so future analysis can evaluate whether the capture → reflect → recall loop is useful. The first target metric is reflect-citation rate: whether wiki pages created or updated by reflection are later read during recalls.
+Wren needs a small measurement primitive so future analysis can evaluate whether the recap → reflect → recall loop is useful. The first target metric is reflect-citation rate: whether wiki pages created or updated by reflection are later read during recalls.
 
-This requires recording workflow events, queries, and touched paths, but Wren should not introduce network telemetry, dashboards, aggregation, or content capture as part of the primitive.
+This requires recording workflow events, queries, and touched paths, but Wren should not introduce network telemetry, dashboards, aggregation, or content collection as part of the primitive.
 
 ## Decision
 
@@ -17,7 +17,7 @@ Metric events are append-only. Wren creates `.wren/cache/` and maintains `.wren/
 Metric records may include:
 
 - Wren-stamped `ts`,
-- `event`: `recall`, `reflect`, `capture`, or `search`,
+- `event`: `recall`, `reflect`, `recap`, or `search`,
 - `query`,
 - `filesRead`,
 - `filesWritten`,
@@ -52,7 +52,7 @@ Reconsider this design if any of these become true:
 - Wren adds `metrics-report` or citation-rate computation,
 - metrics need schema versions or migrations,
 - users need config to disable or prune local metrics,
-- capture/search logging becomes automatic rather than workflow-invoked,
+- recap/search logging becomes automatic rather than workflow-invoked,
 - metric records need additional privacy controls,
 - Wren supports shared or multi-user vault workflows where append behavior is insufficient,
 - any telemetry leaves the local machine.

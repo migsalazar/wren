@@ -6,7 +6,7 @@ Read `.wren/config.json` before Wren work.
 
 When the user invokes Wren, read and follow the matching local workflow:
 
-- `/wren capture` -> `.wren/workflows/capture.md`
+- `/wren recap` -> `.wren/workflows/recap.md`
 - `/wren recall` -> `.wren/workflows/recall.md`
 - `/wren reflect` -> `.wren/workflows/reflect.md`
 - `/wren lint` -> `.wren/workflows/lint.md`
@@ -27,7 +27,7 @@ If the host does not expose `/wren`, treat those strings or named Wren requests 
 
 ## Workflow Summary
 
-- `/wren capture`: create a source-level conversation note; refresh BM25 when enabled.
+- `/wren recap`: create a source-level conversation note; refresh BM25 when enabled.
 - `/wren recall`: read `wiki/index.md`, relevant wiki pages, then source evidence as needed; append local metrics when available.
 - `/wren reflect`: update cited wiki synthesis plus `wiki/index.md` and `wiki/log.md`; append local metrics and refresh BM25 when enabled.
 - `/wren lint`: report health issues without silent rewrites.

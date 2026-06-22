@@ -20,7 +20,7 @@ export interface LintReport {
 interface MarkdownFile {
   absolutePath: string;
   relativePath: string;
-  area: 'capture' | 'wiki';
+  area: 'recap' | 'wiki';
   content: string;
   wiki?: {
     name: string;
@@ -40,9 +40,9 @@ export async function runLint(rootDir: string): Promise<LintReport> {
   const config = await loadConfig(rootDir);
   const issues: LintIssue[] = [];
   const areaRoots = configuredAreaRoots(rootDir, config);
-  const captureFiles = await readCaptureFiles(rootDir, config, issues);
+  const recapFiles = await readRecapFiles(rootDir, config, issues);
   const wikiWorkspaces = await readWikiWorkspaces(rootDir, config, issues);
-  const files = [...captureFiles, ...wikiWorkspaces.flatMap((workspace) => workspace.files)];
+  const files = [...recapFiles, ...wikiWorkspaces.flatMap((workspace) => workspace.files)];
   const wikilinkTargets = buildWikilinkTargetIndex(files);
 
   checkEmptyFiles(files, issues);
@@ -71,19 +71,19 @@ export function formatLintReport(report: LintReport): string {
   return lines.join('\n');
 }
 
-async function readCaptureFiles(rootDir: string, config: WrenConfig, issues: LintIssue[]): Promise<MarkdownFile[]> {
-  const captureRoot = path.join(rootDir, config.areas.capture.path);
-  if (!(await pathExists(captureRoot))) return [];
+async function readRecapFiles(rootDir: string, config: WrenConfig, issues: LintIssue[]): Promise<MarkdownFile[]> {
+  const recapRoot = path.join(rootDir, config.areas.recap.path);
+  if (!(await pathExists(recapRoot))) return [];
 
-  if (!(await isDirectory(captureRoot))) {
-    issues.push(error(`capture path is not a directory: ${config.areas.capture.path}`));
+  if (!(await isDirectory(recapRoot))) {
+    issues.push(error(`recap path is not a directory: ${config.areas.recap.path}`));
     return [];
   }
 
-  return readMarkdownFiles(rootDir, captureRoot, (absolutePath, relativePath, content) => ({
+  return readMarkdownFiles(rootDir, recapRoot, (absolutePath, relativePath, content) => ({
     absolutePath,
     relativePath,
-    area: 'capture',
+    area: 'recap',
     content
   }));
 }
@@ -161,8 +161,8 @@ function checkEmptyFiles(files: MarkdownFile[], issues: LintIssue[]): void {
   for (const file of files) {
     if (file.content.trim().length > 0) continue;
 
-    if (file.area === 'capture') {
-      issues.push(warn(`empty capture note: ${file.relativePath}`));
+    if (file.area === 'recap') {
+      issues.push(warn(`empty recap note: ${file.relativePath}`));
       continue;
     }
 
@@ -320,7 +320,7 @@ function isSpecialWikiFile(file: MarkdownFile): boolean {
 
 function configuredAreaRoots(rootDir: string, config: WrenConfig): string[] {
   return [
-    path.resolve(rootDir, config.areas.capture.path),
+    path.resolve(rootDir, config.areas.recap.path),
     ...Object.values(config.areas.wiki).map((area) => path.resolve(rootDir, area.path))
   ];
 }

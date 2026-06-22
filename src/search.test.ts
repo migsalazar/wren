@@ -235,17 +235,17 @@ async function fixtureVault(): Promise<string> {
   await writeConfig(root, {
     version: 1,
     areas: {
-      capture: { path: 'capture' },
+      recap: { path: 'recap' },
       wiki: { default: { path: 'wiki' } }
     },
-    sources: [{ path: 'notes' }, { path: 'capture' }],
+    sources: [{ path: 'notes' }, { path: 'recap' }],
     useBm25: true,
     defaultWiki: 'default'
   });
 
   await mkdir(path.join(root, 'wiki'), { recursive: true });
   await mkdir(path.join(root, 'notes'), { recursive: true });
-  await mkdir(path.join(root, 'capture'), { recursive: true });
+  await mkdir(path.join(root, 'recap'), { recursive: true });
 
   await writeFile(path.join(root, 'wiki', 'index.md'), '# Wren Index\n\n- [[sky]] — summary about sky notes.\n', 'utf8');
   await writeFile(
@@ -259,7 +259,7 @@ async function fixtureVault(): Promise<string> {
     'utf8'
   );
   await writeFile(path.join(root, 'notes', 'related.md'), '# Related Weather\n\nCloud notes.\n\n#weather\n', 'utf8');
-  await writeFile(path.join(root, 'capture', 'meeting.md'), '# Meeting\n\nWe discussed unrelated planning.\n', 'utf8');
+  await writeFile(path.join(root, 'recap', 'meeting.md'), '# Meeting\n\nWe discussed unrelated planning.\n', 'utf8');
 
   return root;
 }

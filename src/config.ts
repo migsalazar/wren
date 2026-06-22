@@ -9,7 +9,7 @@ export interface SourceArea {
 export interface WrenConfig {
   version: number;
   areas: {
-    capture: {
+    recap: {
       path: string;
     };
     wiki: Record<string, { path: string }>;
@@ -42,11 +42,11 @@ function validateConfig(value: unknown): WrenConfig {
   if (!isRecord(value)) throw new Error(`${CONFIG_PATH} must be a JSON object.`);
   if (value.version !== 1) throw new Error(`${CONFIG_PATH} must set "version": 1.`);
   if (!isRecord(value.areas)) throw new Error(`${CONFIG_PATH} must define areas.`);
-  if (!isRecord(value.areas.capture)) throw new Error(`${CONFIG_PATH} must define areas.capture.`);
-  if (typeof value.areas.capture.path !== 'string' || value.areas.capture.path.length === 0) {
-    throw new Error(`${CONFIG_PATH} must define areas.capture.path.`);
+  if (!isRecord(value.areas.recap)) throw new Error(`${CONFIG_PATH} must define areas.recap.`);
+  if (typeof value.areas.recap.path !== 'string' || value.areas.recap.path.length === 0) {
+    throw new Error(`${CONFIG_PATH} must define areas.recap.path.`);
   }
-  const capturePath = validateRelativePath(value.areas.capture.path, 'areas.capture.path');
+  const recapPath = validateRelativePath(value.areas.recap.path, 'areas.recap.path');
   if (!isRecord(value.areas.wiki)) throw new Error(`${CONFIG_PATH} must define areas.wiki.`);
   if (typeof value.defaultWiki !== 'string' || value.defaultWiki.length === 0) {
     throw new Error(`${CONFIG_PATH} must define defaultWiki.`);
@@ -68,14 +68,14 @@ function validateConfig(value: unknown): WrenConfig {
     wikiPaths.set(name, wikiPath);
   }
 
-  validateAreaBoundaries(capturePath, wikiPaths);
-  const sources = validateSources(value.sources, capturePath, wikiPaths);
+  validateAreaBoundaries(recapPath, wikiPaths);
+  const sources = validateSources(value.sources, recapPath, wikiPaths);
   const useBm25 = validateUseBm25(value.useBm25);
 
   return {
     version: 1,
     areas: {
-      capture: { path: capturePath },
+      recap: { path: recapPath },
       wiki: wikiAreas
     },
     sources,
@@ -102,10 +102,10 @@ function validateRelativePath(value: string, field: string): string {
   return segments.join('/');
 }
 
-function validateAreaBoundaries(capturePath: string, wikiPaths: Map<string, string>): void {
+function validateAreaBoundaries(recapPath: string, wikiPaths: Map<string, string>): void {
   for (const [name, wikiPath] of wikiPaths) {
-    if (pathsOverlap(capturePath, wikiPath)) {
-      throw new Error(`${CONFIG_PATH} areas.capture.path must not overlap areas.wiki.${name}.path.`);
+    if (pathsOverlap(recapPath, wikiPath)) {
+      throw new Error(`${CONFIG_PATH} areas.recap.path must not overlap areas.wiki.${name}.path.`);
     }
   }
 }
@@ -116,8 +116,8 @@ function validateUseBm25(value: unknown): boolean {
   return value;
 }
 
-function validateSources(value: unknown, capturePath: string, wikiPaths: Map<string, string>): SourceArea[] {
-  if (value === undefined) return [{ path: capturePath }];
+function validateSources(value: unknown, recapPath: string, wikiPaths: Map<string, string>): SourceArea[] {
+  if (value === undefined) return [{ path: recapPath }];
   if (!Array.isArray(value)) throw new Error(`${CONFIG_PATH} sources must be an array.`);
   if (value.length === 0) throw new Error(`${CONFIG_PATH} sources must not be empty.`);
 

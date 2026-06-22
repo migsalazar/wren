@@ -1,4 +1,4 @@
-export type WrenWorkflowCommand = 'capture' | 'recall' | 'reflect' | 'lint';
+export type WrenWorkflowCommand = 'recap' | 'recall' | 'reflect' | 'lint';
 export type WrenCliCommand = 'init' | 'doctor' | 'index' | 'search';
 
 export interface WrenHelpPlan {
@@ -32,7 +32,7 @@ export interface WrenCliPlan {
 export type WrenCommandPlan = WrenHelpPlan | WrenErrorPlan | WrenWorkflowPlan | WrenCliPlan;
 
 const WORKFLOW_PATHS: Record<WrenWorkflowCommand, string> = {
-  capture: '.wren/workflows/capture.md',
+  recap: '.wren/workflows/recap.md',
   recall: '.wren/workflows/recall.md',
   reflect: '.wren/workflows/reflect.md',
   lint: '.wren/workflows/lint.md'
@@ -73,7 +73,7 @@ export function formatWrenHelp(): string {
 
 Usage:
   /wren help
-  /wren capture [instructions]
+  /wren recap [instructions]
   /wren recall [query]
   /wren reflect [scope]
   /wren lint [scope]
@@ -83,7 +83,7 @@ Usage:
   /wren init
 
 Workflow commands:
-  capture   Follow .wren/workflows/capture.md and write a capture note.
+  recap     Follow .wren/workflows/recap.md and write a recap note.
   recall    Follow .wren/workflows/recall.md and recover relevant context.
   reflect   Follow .wren/workflows/reflect.md and update wiki synthesis.
   lint      Follow .wren/workflows/lint.md and report health issues.
