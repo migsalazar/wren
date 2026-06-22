@@ -18,9 +18,9 @@ Run available deterministic checks, such as `wren doctor` and `wren lint`. Repor
 
 - missing Wren scaffold files
 - broken markdown links or wikilinks
-- empty notes
-- wiki pages without `## Sources`
-- wiki pages missing from `wiki/index.md`
+- empty capture notes or wiki pages
+- wiki synthesis pages without `## Sources`, excluding `index.md` and `log.md`
+- wiki synthesis pages missing from `wiki/index.md`, excluding `index.md` and `log.md`
 
 If doing manual or future checks, label them clearly; examples include duplicate titles, missing title headings, very short notes, or tag hygiene.
 
