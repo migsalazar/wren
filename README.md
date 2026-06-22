@@ -4,7 +4,7 @@ Wren is a Markdown-first protocol for maintaining traceable reflections across a
 
 It helps agents work with an Obsidian vault. Wren adds local workflows and CLI helpers for: capturing conversations, recalling relevant context, and reflecting source notes into a source-linked wiki.
 
-## Install wren
+## Install Wren
 
 ```bash
 git clone https://github.com/migsalazar/wren.git
@@ -14,11 +14,11 @@ npm run build
 npm link             # install the wren CLI
 ```
 
-### Using with PI
+### Using with Pi
 
 Right now, Pi is the only adapter; adapters are ergonomic conveniences.
 
-```
+```bash
 pi install "$(pwd)"  # install the Pi /wren adapter
 ```
 

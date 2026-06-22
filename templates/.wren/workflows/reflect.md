@@ -7,7 +7,7 @@ Turn configured source notes into source-linked wiki synthesis.
 - Read `.wren/config.json` first.
 - Use configured `sources` as the default evidence scope.
 - Treat capture notes as ordinary source evidence when the capture path is listed in `sources`.
-- Read outside configured `sources` only when the user explicitly provides files or paths.
+- Read configured wiki areas and `sources` as needed; read outside them only when the user explicitly provides files or paths.
 - Search before reading broadly; prefer narrow, relevant source files.
 - Write synthesis only to configured wiki workspaces.
 - Do not rewrite source notes or capture notes unless explicitly asked.

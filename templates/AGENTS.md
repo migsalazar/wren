@@ -16,7 +16,7 @@ If the host does not expose `/wren`, treat those strings or named Wren requests 
 ## Boundaries
 
 - Configured Wren areas and source folders live in `.wren/config.json`.
-- Read configured `sources`; read outside them only when the user explicitly provides files or paths.
+- Read configured wiki areas and `sources` as needed; read outside them only when the user explicitly provides files or paths.
 - Write only configured Wren areas and `.wren/` protocol/cache files.
 - Do not rewrite existing notes unless explicitly asked.
 - Do not create or switch git branches as part of Wren.

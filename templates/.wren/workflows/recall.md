@@ -9,7 +9,7 @@ Recover relevant Wren context for the current discussion.
 - Treat the wiki as compiled synthesis; use sources for evidence, detail, freshness, or missing/thin synthesis.
 - Use configured `sources` as the default evidence scope.
 - Treat capture notes as ordinary source evidence when the capture path is listed in `sources`.
-- Read outside configured `sources` only when the user explicitly provides files or paths.
+- Read configured wiki areas and `sources` as needed; read outside them only when the user explicitly provides files or paths.
 - If `useBm25` is true, use `wren search` before reading broadly.
 - If `useBm25` is false, do not use `wren search`; use the wiki index, links, cited sources, and narrow inspection.
 - Search configured sources only when wiki synthesis is missing, thin, stale, or needs evidence.
