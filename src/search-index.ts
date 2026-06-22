@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { ensureWrenCache, WREN_CACHE_PATH } from './cache.js';
 import { WrenConfig } from './config.js';
 import { pathExists, readText, toPosixPath } from './files.js';
 import { countTerms, extractHeadings, extractTags, tokenize } from './search-text.js';
@@ -49,8 +50,7 @@ export type SearchIndexStatus =
   | { status: 'stale'; path: string; reason: string; documentCount: number }
   | { status: 'fresh'; path: string; documentCount: number };
 
-export const SEARCH_INDEX_PATH = path.join('.wren', 'cache', 'search-index.json');
-const SEARCH_CACHE_GITIGNORE_PATH = path.join('.wren', 'cache', '.gitignore');
+export const SEARCH_INDEX_PATH = path.join(WREN_CACHE_PATH, 'search-index.json');
 
 export async function buildAndWriteSearchIndex(rootDir: string, config: WrenConfig): Promise<IndexReport> {
   const { index, warnings } = await buildSearchIndex(rootDir, config);
@@ -102,9 +102,8 @@ export async function buildSearchIndex(
 
 export async function writeSearchIndex(rootDir: string, index: SearchIndex): Promise<void> {
   const indexPath = path.join(rootDir, SEARCH_INDEX_PATH);
-  await mkdir(path.dirname(indexPath), { recursive: true });
+  await ensureWrenCache(rootDir);
   await writeFile(indexPath, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
-  await writeFile(path.join(rootDir, SEARCH_CACHE_GITIGNORE_PATH), '*\n!.gitignore\n', 'utf8');
 }
 
 export async function readSearchIndex(rootDir: string): Promise<SearchIndex> {

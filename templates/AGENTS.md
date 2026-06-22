@@ -28,7 +28,7 @@ If the host does not expose `/wren`, treat those strings or named Wren requests 
 ## Workflow Summary
 
 - `/wren capture`: create a source-level conversation note; refresh BM25 when enabled.
-- `/wren recall`: read `wiki/index.md`, relevant wiki pages, then source evidence as needed.
-- `/wren reflect`: update cited wiki synthesis plus `wiki/index.md` and `wiki/log.md`; refresh BM25 when enabled.
+- `/wren recall`: read `wiki/index.md`, relevant wiki pages, then source evidence as needed; append local metrics when available.
+- `/wren reflect`: update cited wiki synthesis plus `wiki/index.md` and `wiki/log.md`; append local metrics and refresh BM25 when enabled.
 - `/wren lint`: report health issues without silent rewrites.
 

@@ -53,7 +53,8 @@ Keep `wiki/index.md` as a concise content catalog. Use this structure unless cat
 6. Draft corresponding `wiki/index.md` and `wiki/log.md` updates.
 7. Ask approval only when required by the rules.
 8. Write wiki, index, and log changes.
-9. Ensure BM25 is refreshed when enabled and wiki files changed.
+9. Log the reflection with `wren metric --event reflect`; repeat `--write <path>` for each wiki page created/updated, and include paths only, not content.
+10. Ensure BM25 is refreshed when enabled and wiki files changed.
 
 ## Output
 
