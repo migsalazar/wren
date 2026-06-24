@@ -38,12 +38,12 @@ test('/wren recall builds a recall workflow prompt', () => {
 });
 
 test('/wren recap preserves recap instructions', () => {
-  const plan = planWrenCommand('recap --title "Wren UX" preserve the command decision');
+  const plan = planWrenCommand('recap preserve the Wren command taxonomy decision');
 
   assert.equal(plan.kind, 'workflow');
   assert.equal(plan.command, 'recap');
   assert.equal(plan.workflowPath, '.wren/workflows/recap.md');
-  assert.match(plan.prompt, /\/wren recap --title "Wren UX" preserve the command decision/);
+  assert.match(plan.prompt, /\/wren recap preserve the Wren command taxonomy decision/);
   assert.match(plan.prompt, /User arguments for the workflow:/);
 });
 

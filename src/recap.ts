@@ -4,25 +4,27 @@ import { loadConfig } from './config.js';
 import { pathExists, readText, toPosixPath } from './files.js';
 import { buildAndWriteSearchIndex } from './search-index.js';
 
-interface RecapOptions {
+interface WriteRecapOptions {
   title?: string;
-  body?: string;
+  body: string;
   tags?: string[];
 }
 
 const RECAP_TEMPLATE_PATH = path.join('.wren', 'templates', 'recap.md');
 
-export async function recap(rootDir: string, options: RecapOptions): Promise<string> {
+export async function writeRecap(rootDir: string, options: WriteRecapOptions): Promise<string> {
   const config = await loadConfig(rootDir);
   const now = new Date();
   const title = options.title?.trim() || 'Recap';
+  const body = options.body.trim();
+  if (!body) throw new Error('writeRecap requires non-empty body content.');
   const date = formatDate(now);
   const filename = await nextRecapFilename(rootDir, config.areas.recap.path, now, title);
   const template = await readRecapTemplate(rootDir);
   const content = template
     .replaceAll('{{title}}', title)
     .replaceAll('{{date}}', date)
-    .replaceAll('{{body}}', formatBody(options.body))
+    .replaceAll('{{body}}', body)
     .replaceAll('{{tags}}', formatTags(options.tags));
 
   const recapPath = path.join(rootDir, config.areas.recap.path, filename);
@@ -55,15 +57,6 @@ async function nextRecapFilename(rootDir: string, recapDir: string, date: Date, 
   }
 
   return candidate;
-}
-
-function formatBody(body: string | undefined): string {
-  const trimmed = body?.trim();
-  if (!trimmed) {
-    return ['## Summary', '', '## Assumptions', '', '## Disagreements / Tensions'].join('\n');
-  }
-
-  return trimmed;
 }
 
 function formatTags(tags: string[] | undefined): string {

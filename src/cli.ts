@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { recap } from './recap.js';
+import { writeRecap } from './recap.js';
 import { loadConfig } from './config.js';
 import { formatDoctorReport, runDoctor } from './doctor.js';
 import { formatInitResult, initWren } from './init.js';
@@ -26,11 +26,18 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (command === 'recap') {
+  if (command === 'write-recap') {
+    rejectUnsupportedOptions(args, new Set(['--title', '-t', '--tag', '--stdin']), 'write-recap');
+    const unexpected = readPositionals(args, new Set(['--title', '-t', '--tag']))[0];
+    if (unexpected) throw new Error(`Unexpected write-recap argument: ${unexpected}. Pass recap content with --stdin.`);
+    if (!hasOption(args, '--stdin')) throw new Error('write-recap requires --stdin because it stores already-authored recap content.');
+
     const title = readOption(args, '--title') ?? readOption(args, '-t');
     const tags = readOptions(args, '--tag');
-    const body = hasOption(args, '--stdin') ? await readStdin() : undefined;
-    const createdPath = await recap(rootDir, { title, tags, body });
+    const body = await readStdin();
+    if (!body.trim()) throw new Error('write-recap requires non-empty stdin content.');
+
+    const createdPath = await writeRecap(rootDir, { title, tags, body });
     console.log(`Created recap: ${createdPath}`);
     return;
   }
@@ -114,6 +121,14 @@ function hasOption(args: string[], name: string): boolean {
   return args.includes(name);
 }
 
+function rejectUnsupportedOptions(args: string[], allowedOptions: Set<string>, commandName: string): void {
+  for (const arg of args) {
+    if (arg.startsWith('-') && !allowedOptions.has(arg)) {
+      throw new Error(`Unsupported ${commandName} option: ${arg}.`);
+    }
+  }
+}
+
 function readPositionals(args: string[], optionsWithValues = new Set(['--area', '--limit', '-n'])): string[] {
   const values: string[] = [];
 
@@ -158,19 +173,21 @@ function printHelp(): void {
   console.log(`Usage: wren <command> [options]
 
 Commands:
-  init                 Create Wren scaffold files if missing
-  recap                Create a recap note from the template
-  doctor               Diagnose Wren vault setup
-  index                Build the local BM25 search index
-  search <query>       Search the local BM25 index
-  metric               Append a local workflow metric event
-  lint                 Check Wren content health
+  init                       Create Wren scaffold files if missing
+  doctor                     Diagnose Wren vault setup
+  index                      Build the local BM25 search index
+  search <query>             Search the local BM25 index
+  lint                       Check Wren content health
+
+Workflow support commands:
+  write-recap                Store already-authored recap content from stdin
+  metric                     Append a local workflow metric event
 
 Options:
-  recap --title, -t    Optional recap title
-  recap --tag          Optional tag, repeatable
-  recap --stdin        Read recap body from stdin
-  search --area        atlas, sources, or all (default: all)
+  write-recap --title, -t    Optional recap title
+  write-recap --tag          Optional tag, repeatable
+  write-recap --stdin        Required; read recap body from stdin
+  search --area              atlas, sources, or all (default: all)
   search --limit, -n   Maximum results (default: 10)
   search --json        Print JSON output
   metric --stdin       Read metric JSON object from stdin

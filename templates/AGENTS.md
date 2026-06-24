@@ -33,7 +33,7 @@ When the user invokes a Wren workflow, read and follow the matching local workfl
 
 ## Workflow Summary
 
-- `/wren recap`: create a source-level conversation note; refresh BM25 when enabled.
+- `/wren recap`: summarize the current agent conversation into a source-level recap note; refresh BM25 when enabled.
 - `/wren recall`: read the configured atlas root's `index.md`, relevant atlas pages, then source evidence as needed; append local metrics when available.
 - `/wren reflect`: update cited atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; append local metrics and refresh BM25 when enabled.
 
