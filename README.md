@@ -24,7 +24,7 @@ pi install "$(pwd)"  # install the Pi /wren adapter
 
 ### Using with other agents
 
-Agents that read `AGENTS.md` can use `/wren recap`, `/wren recall`, `/wren reflect`, and `/wren lint` without an adapter.
+Agents that read `AGENTS.md` can use `/wren recap`, `/wren recall`, and `/wren reflect` as workflows, and can run `wren lint` as a deterministic helper.
 
 ## Initialize local workflow
 
@@ -77,13 +77,23 @@ From the vault, start your agent and use:
 
 ```text
 /wren help
+```
+
+Agent workflows guide reasoning, retrieval, and synthesis:
+
+```text
 /wren recap [instructions]
 /wren recall [query]
 /wren reflect [scope]
-/wren lint [scope]
 ```
 
-With the Pi adapter installed:
+Deterministic helpers run bounded checks or actions:
+
+```text
+/wren lint
+```
+
+With the Pi adapter installed, these CLI helpers are also available through `/wren`:
 
 ```text
 /wren init
@@ -97,7 +107,11 @@ Workflow summary:
 - `/wren recap`: write a source-level conversation note to the configured recap area; refresh BM25 when enabled.
 - `/wren recall`: read the atlas index first, then relevant atlas pages and source evidence as needed; log path/query-only metrics locally.
 - `/wren reflect`: update source-linked atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; log path-only metrics and refresh BM25 when enabled.
-- `/wren lint`: report Wren workspace health issues without silent rewrites.
+
+Helper summary:
+
+- `/wren lint`: run deterministic Wren content/protocol health checks without silent rewrites.
+- `/wren doctor`: run deterministic setup, config, runtime, and search-index diagnostics.
 
 Agent workflow writes happen directly in git-backed vaults. In non-git vaults, Wren asks before writing. Direct CLI commands execute as requested. Wren also asks before destructive, unusual, or out-of-boundary changes. Wren does not create or switch git branches.
 
@@ -117,6 +131,7 @@ atlas/                    -> source-linked synthesis
 - `/wren recall` may append path/query-only metrics to `.wren/cache/metrics.jsonl`.
 - `/wren reflect` writes only configured atlas files and derived `.wren/cache/` files.
 - Wren edits `.wren/config.json`, workflows, or templates only when explicitly requested.
+- `wren lint` checks vault content and Wren protocol health; `wren doctor` checks setup, config, runtime, and search-index health.
 - Wren does not automatically synthesize notes; invoke `/wren reflect` when source notes should enter the atlas.
 
 ## Atlas Index, Log, and Sections

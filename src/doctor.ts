@@ -47,7 +47,6 @@ export async function runDoctor(rootDir: string): Promise<DoctorReport> {
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'recap.md'), 'recap workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'recall.md'), 'recall workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'reflect.md'), 'reflect workflow', 'error');
-  await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'lint.md'), 'lint workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'templates', 'recap.md'), 'recap template', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'templates', 'atlas.md'), 'atlas template', 'error');
   await checkPath(checks, rootDir, config.areas.recap.path, 'recap directory', 'warn');
