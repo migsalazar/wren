@@ -18,7 +18,6 @@ const TEMPLATE_FILES = [
   { from: path.join('templates', '.wren', 'workflows', 'recap.md'), to: path.join('.wren', 'workflows', 'recap.md') },
   { from: path.join('templates', '.wren', 'workflows', 'recall.md'), to: path.join('.wren', 'workflows', 'recall.md') },
   { from: path.join('templates', '.wren', 'workflows', 'reflect.md'), to: path.join('.wren', 'workflows', 'reflect.md') },
-  { from: path.join('templates', '.wren', 'workflows', 'lint.md'), to: path.join('.wren', 'workflows', 'lint.md') },
   { from: path.join('templates', '.wren', 'templates', 'recap.md'), to: path.join('.wren', 'templates', 'recap.md') },
   { from: path.join('templates', '.wren', 'templates', 'atlas.md'), to: path.join('.wren', 'templates', 'atlas.md') },
   { from: path.join('templates', 'atlas', 'index.md'), to: path.join('atlas', 'index.md') },

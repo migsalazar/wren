@@ -4,16 +4,17 @@ Read `.wren/config.json` before Wren work.
 
 ## Workflow Routing
 
-When the user invokes Wren, read and follow the matching local workflow:
+When the user invokes a Wren workflow, read and follow the matching local workflow:
 
 - `/wren recap` -> `.wren/workflows/recap.md`
 - `/wren recall` -> `.wren/workflows/recall.md`
 - `/wren reflect` -> `.wren/workflows/reflect.md`
-- `/wren lint` -> `.wren/workflows/lint.md`
+
+`/wren lint` is a deterministic helper command, not a workflow. Run `wren lint` and report its findings.
 
 ### Routing Rules
 
-- Run Wren workflows only when the user explicitly invokes `/wren <command>`, `wren <command>`, or clearly asks to use Wren.
+- Run Wren workflows only when the user explicitly invokes `/wren recap`, `/wren recall`, `/wren reflect`, or clearly asks to use Wren.
 - Treat ordinary conversational uses of “recap”, “recall”, “reflect”, or “lint” as normal requests, not Wren workflow requests.
 - If a workflow file is missing, say the scaffold is incomplete and suggest `wren init`.
 
@@ -35,4 +36,7 @@ When the user invokes Wren, read and follow the matching local workflow:
 - `/wren recap`: create a source-level conversation note; refresh BM25 when enabled.
 - `/wren recall`: read the configured atlas root's `index.md`, relevant atlas pages, then source evidence as needed; append local metrics when available.
 - `/wren reflect`: update cited atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; append local metrics and refresh BM25 when enabled.
-- `/wren lint`: report health issues without silent rewrites.
+
+## Deterministic Helpers
+
+- `/wren lint`: run `wren lint` to report content health issues without silent rewrites.

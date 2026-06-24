@@ -17,7 +17,6 @@ test('initWren creates scaffold files without creating recap folder', async () =
     assert.deepEqual(result.created.sort(), [
       '.wren/config.json',
       '.wren/workflows/recap.md',
-      '.wren/workflows/lint.md',
       '.wren/workflows/recall.md',
       '.wren/workflows/reflect.md',
       '.wren/templates/recap.md',

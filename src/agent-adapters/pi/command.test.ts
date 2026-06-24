@@ -56,12 +56,13 @@ test('/wren reflect preserves scope', () => {
   assert.match(plan.prompt, /notes\/philosophy\.md/);
 });
 
-test('/wren lint is workflow-backed', () => {
+test('/wren lint builds a CLI plan', () => {
   const plan = planWrenCommand('lint');
 
-  assert.equal(plan.kind, 'workflow');
+  assert.equal(plan.kind, 'cli');
   assert.equal(plan.command, 'lint');
-  assert.equal(plan.workflowPath, '.wren/workflows/lint.md');
+  assert.deepEqual(plan.cliArgs, ['lint']);
+  assert.equal(plan.displayCommand, 'wren lint');
 });
 
 test('/wren doctor builds a CLI plan', () => {

@@ -1,5 +1,5 @@
-export type WrenWorkflowCommand = 'recap' | 'recall' | 'reflect' | 'lint';
-export type WrenCliCommand = 'init' | 'doctor' | 'index' | 'search';
+export type WrenWorkflowCommand = 'recap' | 'recall' | 'reflect';
+export type WrenCliCommand = 'init' | 'doctor' | 'index' | 'search' | 'lint';
 
 export interface WrenHelpPlan {
   kind: 'help';
@@ -34,12 +34,11 @@ export type WrenCommandPlan = WrenHelpPlan | WrenErrorPlan | WrenWorkflowPlan | 
 const WORKFLOW_PATHS: Record<WrenWorkflowCommand, string> = {
   recap: '.wren/workflows/recap.md',
   recall: '.wren/workflows/recall.md',
-  reflect: '.wren/workflows/reflect.md',
-  lint: '.wren/workflows/lint.md'
+  reflect: '.wren/workflows/reflect.md'
 };
 
 const WORKFLOW_COMMANDS = new Set<string>(Object.keys(WORKFLOW_PATHS));
-const CLI_COMMANDS = new Set<string>(['init', 'doctor', 'index', 'search']);
+const CLI_COMMANDS = new Set<string>(['init', 'doctor', 'index', 'search', 'lint']);
 
 export function planWrenCommand(args: string): WrenCommandPlan {
   const parsed = parseInvocation(args);
@@ -76,20 +75,20 @@ Usage:
   /wren recap [instructions]
   /wren recall [query]
   /wren reflect [scope]
-  /wren lint [scope]
+  /wren lint
   /wren doctor
   /wren index
   /wren search <query> [--area atlas|sources|all] [--limit N]
   /wren init
 
-Workflow commands:
+Agent workflows:
   recap     Follow .wren/workflows/recap.md and write a recap note.
   recall    Follow .wren/workflows/recall.md and recover relevant context.
   reflect   Follow .wren/workflows/reflect.md and update atlas synthesis.
-  lint      Follow .wren/workflows/lint.md and report health issues.
 
-CLI helper commands:
-  doctor    Run deterministic setup diagnostics.
+Deterministic helper commands:
+  lint      Check Wren content health.
+  doctor    Run setup diagnostics.
   index     Build the local BM25 search index.
   search    Search the local BM25 index.
   init      Create the Wren scaffold after confirmation.
@@ -97,7 +96,7 @@ CLI helper commands:
 Wren layers:
   /wren ... = canonical in-agent entrypoint when this adapter is installed
   wren ...  = deterministic CLI helper
-  .wren/workflows/*.md = local protocol source of truth`;
+  .wren/workflows/*.md = local workflow protocol source of truth`;
 }
 
 function buildWorkflowPrompt(command: WrenWorkflowCommand, argsText: string): string {
