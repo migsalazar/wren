@@ -104,7 +104,7 @@ With the Pi adapter installed, these CLI helpers are also available through `/wr
 
 Workflow summary:
 
-- `/wren recap`: write a source-level conversation note to the configured recap area; refresh BM25 when enabled.
+- `/wren recap`: summarize the current agent conversation into a source-level recap note; store it with deterministic recap-writing mechanics and refresh BM25 when enabled.
 - `/wren recall`: read the atlas index first, then relevant atlas pages and source evidence as needed; log path/query-only metrics locally.
 - `/wren reflect`: update source-linked atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; log path-only metrics and refresh BM25 when enabled.
 
@@ -158,17 +158,15 @@ wren init
 wren index
 wren search "query" --area all --limit 10
 wren doctor
-wren recap --title "Discussion title" --tag wren --stdin
-wren metric --event recall --query "query" --read atlas/page.md
 wren lint
 ```
 
 - `wren index` builds `.wren/cache/search-index.json`.
 - `wren search` returns ranked, line-numbered snippets.
-- `wren recap --stdin` uses `.wren/templates/recap.md` and refreshes BM25 when enabled.
-- `wren metric` appends local, git-ignored JSONL events to `.wren/cache/metrics.jsonl`.
 - `wren doctor` reports setup, source, and search-index issues.
 - `wren lint` reports structure/link/source issues.
+
+Workflow support commands such as `wren metric` are used by Wren workflows and adapters, but are not normal user-facing helpers.
 
 ## Development
 

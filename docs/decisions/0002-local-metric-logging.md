@@ -10,7 +10,7 @@ This requires recording workflow events, queries, and touched paths, but Wren sh
 
 ## Decision
 
-Add `wren metric` as a local-only CLI helper that appends one JSON object per line to `.wren/cache/metrics.jsonl`.
+Add `wren metric` as a local-only workflow support CLI command that appends one JSON object per line to `.wren/cache/metrics.jsonl`.
 
 Metric events are append-only. Wren creates `.wren/cache/` and maintains `.wren/cache/.gitignore` so metric files remain untracked by default.
 
