@@ -79,13 +79,13 @@ Usage:
   /wren lint [scope]
   /wren doctor
   /wren index
-  /wren search <query> [--area wiki|sources|all] [--limit N]
+  /wren search <query> [--area atlas|sources|all] [--limit N]
   /wren init
 
 Workflow commands:
   recap     Follow .wren/workflows/recap.md and write a recap note.
   recall    Follow .wren/workflows/recall.md and recover relevant context.
-  reflect   Follow .wren/workflows/reflect.md and update wiki synthesis.
+  reflect   Follow .wren/workflows/reflect.md and update atlas synthesis.
   lint      Follow .wren/workflows/lint.md and report health issues.
 
 CLI helper commands:
@@ -133,7 +133,7 @@ function buildCliPlan(command: WrenCliCommand, argsText: string): WrenCommandPla
 
   const args = tokenized.tokens;
   if (command === 'search' && args.length === 0) {
-    return { kind: 'error', message: 'Usage: /wren search <query> [--area wiki|sources|all] [--limit N]' };
+    return { kind: 'error', message: 'Usage: /wren search <query> [--area atlas|sources|all] [--limit N]' };
   }
 
   if (command !== 'search' && args.length > 0) {

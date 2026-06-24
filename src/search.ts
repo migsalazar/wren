@@ -12,7 +12,7 @@ export {
 } from './search-index.js';
 export type { IndexReport, SearchIndexStatus } from './search-index.js';
 
-export type SearchArea = 'wiki' | 'sources' | 'all';
+export type SearchArea = 'atlas' | 'sources' | 'all';
 
 export interface SearchOptions {
   query: string;
@@ -27,7 +27,7 @@ export interface SearchSnippet {
 
 export interface SearchResult {
   path: string;
-  area: 'wiki' | 'source';
+  area: 'atlas' | 'source';
   score: number;
   matched: string[];
   snippet?: SearchSnippet;
@@ -78,11 +78,11 @@ export async function runSearch(rootDir: string, options: SearchOptions): Promis
   };
 }
 
-export function formatIndexReport(report: { documentCount: number; wikiCount: number; sourceCount: number; warnings: string[]; indexPath: string }): string {
+export function formatIndexReport(report: { documentCount: number; atlasCount: number; sourceCount: number; warnings: string[]; indexPath: string }): string {
   const lines = ['Wren index', ''];
 
   lines.push(`✓ indexed ${report.documentCount} Markdown file${plural(report.documentCount)}`);
-  lines.push(`  wiki: ${report.wikiCount}`);
+  lines.push(`  atlas: ${report.atlasCount}`);
   lines.push(`  sources: ${report.sourceCount}`);
 
   for (const warning of report.warnings) lines.push(`! ${warning}`);
@@ -112,7 +112,7 @@ export function formatSearchReport(report: SearchReport): string {
     lines.push('');
   }
 
-  lines.push(`Result: ${report.results.length} match${plural(report.results.length)}`);
+  lines.push(`Result: ${report.results.length} ${matchNoun(report.results.length)}`);
   return lines.join('\n');
 }
 
@@ -298,7 +298,7 @@ function trimSnippet(value: string): string {
 
 function matchesArea(document: IndexedDocument, area: SearchArea): boolean {
   if (area === 'all') return true;
-  if (area === 'wiki') return document.area === 'wiki';
+  if (area === 'atlas') return document.area === 'atlas';
   return document.area === 'source';
 }
 
@@ -334,4 +334,8 @@ function roundScore(value: number): number {
 
 function plural(count: number): string {
   return count === 1 ? '' : 's';
+}
+
+function matchNoun(count: number): string {
+  return count === 1 ? 'match' : 'matches';
 }

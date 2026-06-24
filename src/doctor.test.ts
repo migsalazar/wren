@@ -35,13 +35,41 @@ test('runDoctor passes initialized vault with recap and search index warnings', 
     assert.equal(report.errors, 0);
     assert.equal(report.warnings, 2);
     assert.ok(report.checks.some((check) => check.message === 'config valid'));
-    assert.ok(report.checks.some((check) => check.message === 'wiki index exists: wiki/index.md'));
+    assert.ok(report.checks.some((check) => check.message === 'atlas configured: atlas'));
+    assert.ok(report.checks.some((check) => check.message === 'atlas default section configured: general'));
+    assert.ok(report.checks.some((check) => check.message === 'atlas index exists: atlas/index.md'));
     assert.ok(report.checks.some((check) => check.message === 'recap workflow exists: .wren/workflows/recap.md'));
     assert.ok(report.checks.some((check) => check.message === 'recap template exists: .wren/templates/recap.md'));
-    assert.ok(report.checks.some((check) => check.message === 'wiki template exists: .wren/templates/wiki.md'));
+    assert.ok(report.checks.some((check) => check.message === 'atlas template exists: .wren/templates/atlas.md'));
     assert.ok(report.checks.some((check) => check.message === 'recap directory missing: recap'));
+    assert.ok(report.checks.some((check) => check.message === 'source configured: recap -> atlas/general'));
     assert.ok(report.checks.some((check) => check.message === 'BM25 recall enabled'));
     assert.ok(report.checks.some((check) => check.message === 'search index missing: .wren/cache/search-index.json'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('runDoctor renders source mappings with the configured atlas root', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'knowledge', defaultSection: 'general' }
+      },
+      sources: [
+        { path: 'recap' },
+        { path: 'notes', atlasSection: 'work' }
+      ],
+      useBm25: false
+    });
+
+    const report = await runDoctor(root);
+
+    assert.ok(report.checks.some((check) => check.message === 'source configured: recap -> knowledge/general'));
+    assert.ok(report.checks.some((check) => check.message === 'source configured: notes -> knowledge/work'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -105,24 +133,23 @@ test('runDoctor warns when search index is stale', async () => {
   }
 });
 
-test('runDoctor reports missing wiki files as errors', async () => {
+test('runDoctor reports missing atlas files as errors', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
-      },
-      defaultWiki: 'default'
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
     });
 
     const report = await runDoctor(root);
 
     assert.ok(report.errors >= 3);
-    assert.ok(report.checks.some((check) => check.message === 'wiki directory missing: wiki'));
-    assert.ok(report.checks.some((check) => check.message === 'wiki index missing: wiki/index.md'));
-    assert.ok(report.checks.some((check) => check.message === 'wiki log missing: wiki/log.md'));
+    assert.ok(report.checks.some((check) => check.message === 'atlas directory missing: atlas'));
+    assert.ok(report.checks.some((check) => check.message === 'atlas index missing: atlas/index.md'));
+    assert.ok(report.checks.some((check) => check.message === 'atlas log missing: atlas/log.md'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -135,14 +162,14 @@ test('formatDoctorReport renders status symbols and summary', () => {
     checks: [
       { status: 'ok', message: 'config valid' },
       { status: 'warn', message: 'recap directory missing: recap' },
-      { status: 'error', message: 'wiki missing: wiki' }
+      { status: 'error', message: 'atlas missing: atlas' }
     ]
   });
 
   assert.match(output, /^Wren doctor/);
   assert.match(output, /✓ config valid/);
   assert.match(output, /! recap directory missing: recap/);
-  assert.match(output, /✗ wiki missing: wiki/);
+  assert.match(output, /✗ atlas missing: atlas/);
   assert.match(output, /Result: 1 warning, 1 error/);
 });
 

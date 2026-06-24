@@ -4,17 +4,16 @@
     "recap": {
       "path": "recap"
     },
-    "wiki": {
-      "default": {
-        "path": "wiki"
-      }
+    "atlas": {
+      "path": "atlas",
+      "defaultSection": "general"
     }
   },
   "sources": [
     {
-      "path": "recap"
+      "path": "recap",
+      "atlasSection": "general"
     }
   ],
-  "useBm25": true,
-  "defaultWiki": "default"
+  "useBm25": true
 }

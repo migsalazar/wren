@@ -9,8 +9,8 @@ The user may provide a title, tags, or preservation instructions. If missing, ch
 ## Rules
 
 - Read `.wren/config.json` first.
-- Write the recap note only to the configured recap area.
-- Do not update wiki pages, `wiki/index.md`, or `wiki/log.md`.
+- Write the recap note only to the configured recap area. If the user explicitly specifies a subfolder, it must stay inside that recap area.
+- Do not update atlas pages or the configured atlas root's `index.md` or `log.md`.
 - Do not write outside the recap area except derived `.wren/cache/` search-index updates when BM25 is enabled.
 - Preserve source-level memory: summary, assumptions, disagreements/tensions, and Markdown tags.
 - Use `.wren/templates/recap.md`; keep only `date` metadata until lint/schema rules exist.

@@ -17,20 +17,21 @@ export interface LintReport {
   warnings: number;
 }
 
-interface MarkdownFile {
-  absolutePath: string;
+interface LinkTargetFile {
   relativePath: string;
-  area: 'recap' | 'wiki';
   content: string;
-  wiki?: {
-    name: string;
+  atlas?: {
     root: string;
     relativePath: string;
   };
 }
 
-interface WikiWorkspace {
-  name: string;
+interface MarkdownFile extends LinkTargetFile {
+  absolutePath: string;
+  area: 'recap' | 'atlas';
+}
+
+interface AtlasWorkspace {
   root: string;
   relativePath: string;
   files: MarkdownFile[];
@@ -41,15 +42,19 @@ export async function runLint(rootDir: string): Promise<LintReport> {
   const issues: LintIssue[] = [];
   const areaRoots = configuredAreaRoots(rootDir, config);
   const recapFiles = await readRecapFiles(rootDir, config, issues);
-  const wikiWorkspaces = await readWikiWorkspaces(rootDir, config, issues);
-  const files = [...recapFiles, ...wikiWorkspaces.flatMap((workspace) => workspace.files)];
-  const wikilinkTargets = buildWikilinkTargetIndex(files);
+  const atlasWorkspace = await readAtlasWorkspace(rootDir, config, issues);
+  const atlasFiles = atlasWorkspace?.files ?? [];
+  const files = [...recapFiles, ...atlasFiles];
+  const sourceLinkTargetFiles = await readSourceLinkTargetFiles(rootDir, config);
+  const internalLinkTargets = buildInternalLinkTargetIndex([...files, ...sourceLinkTargetFiles]);
 
   checkEmptyFiles(files, issues);
-  checkWikiSources(wikiWorkspaces, issues);
-  checkWikiIndexCoverage(wikiWorkspaces, issues);
+  if (atlasWorkspace) {
+    checkAtlasSources(atlasWorkspace, issues);
+    checkAtlasIndexCoverage(atlasWorkspace, issues);
+  }
   await checkMarkdownLinks(files, areaRoots, issues);
-  checkWikilinks(files, wikilinkTargets, issues);
+  checkInternalLinks(files, internalLinkTargets, issues);
 
   return summarize(issues, files.length);
 }
@@ -83,63 +88,79 @@ async function readRecapFiles(rootDir: string, config: WrenConfig, issues: LintI
   return readMarkdownFiles(rootDir, recapRoot, (absolutePath, relativePath, content) => ({
     absolutePath,
     relativePath,
-    area: 'recap',
+    area: 'recap' as const,
     content
   }));
 }
 
-async function readWikiWorkspaces(rootDir: string, config: WrenConfig, issues: LintIssue[]): Promise<WikiWorkspace[]> {
-  const workspaces: WikiWorkspace[] = [];
-
-  for (const [name, area] of Object.entries(config.areas.wiki)) {
-    const wikiRoot = path.join(rootDir, area.path);
-    if (!(await pathExists(wikiRoot))) {
-      issues.push(error(`wiki directory missing: ${area.path}`));
-      continue;
-    }
-
-    if (!(await isDirectory(wikiRoot))) {
-      issues.push(error(`wiki path is not a directory: ${area.path}`));
-      continue;
-    }
-
-    const files = await readMarkdownFiles(rootDir, wikiRoot, (absolutePath, relativePath, content) => ({
-      absolutePath,
-      relativePath,
-      area: 'wiki',
-      content,
-      wiki: {
-        name,
-        root: wikiRoot,
-        relativePath: toPosixPath(path.relative(wikiRoot, absolutePath))
-      }
-    }));
-
-    if (!(await pathExists(path.join(wikiRoot, 'index.md')))) {
-      issues.push(error(`wiki index missing: ${path.posix.join(area.path, 'index.md')}`));
-    }
-
-    workspaces.push({ name, root: wikiRoot, relativePath: area.path, files });
+async function readAtlasWorkspace(rootDir: string, config: WrenConfig, issues: LintIssue[]): Promise<AtlasWorkspace | undefined> {
+  const atlasRoot = path.join(rootDir, config.areas.atlas.path);
+  if (!(await pathExists(atlasRoot))) {
+    issues.push(error(`atlas directory missing: ${config.areas.atlas.path}`));
+    return undefined;
   }
 
-  return workspaces;
+  if (!(await isDirectory(atlasRoot))) {
+    issues.push(error(`atlas path is not a directory: ${config.areas.atlas.path}`));
+    return undefined;
+  }
+
+  const files = await readMarkdownFiles(rootDir, atlasRoot, (absolutePath, relativePath, content) => ({
+    absolutePath,
+    relativePath,
+    area: 'atlas' as const,
+    content,
+    atlas: {
+      root: atlasRoot,
+      relativePath: toPosixPath(path.relative(atlasRoot, absolutePath))
+    }
+  }));
+
+  if (!(await pathExists(path.join(atlasRoot, 'index.md')))) {
+    issues.push(error(`atlas index missing: ${path.posix.join(config.areas.atlas.path, 'index.md')}`));
+  }
+
+  return { root: atlasRoot, relativePath: config.areas.atlas.path, files };
 }
 
-async function readMarkdownFiles(
+async function readSourceLinkTargetFiles(rootDir: string, config: WrenConfig): Promise<LinkTargetFile[]> {
+  const files: LinkTargetFile[] = [];
+  const seenSources = new Set<string>();
+
+  for (const source of config.sources) {
+    if (seenSources.has(source.path)) continue;
+    seenSources.add(source.path);
+
+    const sourceRoot = path.join(rootDir, source.path);
+    if (!(await pathExists(sourceRoot))) continue;
+    if (!(await isDirectory(sourceRoot))) continue;
+
+    files.push(
+      ...(await readMarkdownFiles(rootDir, sourceRoot, (_absolutePath, relativePath, content) => ({
+        relativePath,
+        content
+      })))
+    );
+  }
+
+  return files;
+}
+
+async function readMarkdownFiles<T>(
   rootDir: string,
   directory: string,
-  build: (absolutePath: string, relativePath: string, content: string) => MarkdownFile
-): Promise<MarkdownFile[]> {
-  const files: MarkdownFile[] = [];
+  build: (absolutePath: string, relativePath: string, content: string) => T
+): Promise<T[]> {
+  const files: T[] = [];
   await collectMarkdownFiles(rootDir, directory, build, files);
   return files;
 }
 
-async function collectMarkdownFiles(
+async function collectMarkdownFiles<T>(
   rootDir: string,
   directory: string,
-  build: (absolutePath: string, relativePath: string, content: string) => MarkdownFile,
-  files: MarkdownFile[]
+  build: (absolutePath: string, relativePath: string, content: string) => T,
+  files: T[]
 ): Promise<void> {
   const entries = await readdir(directory, { withFileTypes: true });
 
@@ -166,30 +187,28 @@ function checkEmptyFiles(files: MarkdownFile[], issues: LintIssue[]): void {
       continue;
     }
 
-    issues.push(error(`empty wiki page: ${file.relativePath}`));
+    issues.push(error(`empty atlas page: ${file.relativePath}`));
   }
 }
 
-function checkWikiSources(workspaces: WikiWorkspace[], issues: LintIssue[]): void {
-  for (const file of workspaces.flatMap((workspace) => workspace.files)) {
-    if (isSpecialWikiFile(file)) continue;
+function checkAtlasSources(workspace: AtlasWorkspace, issues: LintIssue[]): void {
+  for (const file of workspace.files) {
+    if (isSpecialAtlasFile(file)) continue;
     if (/^##\s+Sources\b/m.test(file.content)) continue;
 
-    issues.push(error(`wiki page missing sources: ${file.relativePath}`));
+    issues.push(error(`atlas page missing sources: ${file.relativePath}`));
   }
 }
 
-function checkWikiIndexCoverage(workspaces: WikiWorkspace[], issues: LintIssue[]): void {
-  for (const workspace of workspaces) {
-    const index = workspace.files.find((file) => file.wiki?.relativePath === 'index.md');
-    if (!index) continue;
+function checkAtlasIndexCoverage(workspace: AtlasWorkspace, issues: LintIssue[]): void {
+  const index = workspace.files.find((file) => file.atlas?.relativePath === 'index.md');
+  if (!index) return;
 
-    for (const file of workspace.files) {
-      if (isSpecialWikiFile(file)) continue;
-      if (indexMentionsPage(index.content, file)) continue;
+  for (const file of workspace.files) {
+    if (isSpecialAtlasFile(file)) continue;
+    if (indexMentionsPage(index.content, file)) continue;
 
-      issues.push(warn(`wiki page not listed in index: ${file.relativePath}`));
-    }
+    issues.push(warn(`atlas page not listed in index: ${file.relativePath}`));
   }
 }
 
@@ -208,28 +227,27 @@ async function checkMarkdownLinks(files: MarkdownFile[], areaRoots: string[], is
   }
 }
 
-function checkWikilinks(files: MarkdownFile[], targets: Set<string>, issues: LintIssue[]): void {
+function checkInternalLinks(files: MarkdownFile[], targets: Set<string>, issues: LintIssue[]): void {
   for (const file of files) {
-    for (const target of extractWikilinkTargets(file.content)) {
-      const normalizedTarget = normalizeWikilinkTarget(target);
+    for (const target of extractInternalLinkTargets(file.content)) {
+      const normalizedTarget = normalizeInternalLinkTarget(target);
       if (!normalizedTarget) continue;
       if (targets.has(normalizedTarget)) continue;
 
-      issues.push(error(`broken wikilink in ${file.relativePath}: [[${target}]]`));
+      issues.push(error(`broken internal link in ${file.relativePath}: [[${target}]]`));
     }
   }
 }
 
-function buildWikilinkTargetIndex(files: MarkdownFile[]): Set<string> {
+function buildInternalLinkTargetIndex(files: LinkTargetFile[]): Set<string> {
   const targets = new Set<string>();
 
   for (const file of files) {
     addTarget(targets, withoutMarkdownExtension(file.relativePath));
     addTarget(targets, withoutMarkdownExtension(path.posix.basename(file.relativePath)));
 
-    if (file.wiki) {
-      addTarget(targets, withoutMarkdownExtension(file.wiki.relativePath));
-      addTarget(targets, `${file.wiki.name}/${withoutMarkdownExtension(file.wiki.relativePath)}`);
+    if (file.atlas) {
+      addTarget(targets, withoutMarkdownExtension(file.atlas.relativePath));
     }
 
     const title = firstHeading(file.content);
@@ -240,20 +258,20 @@ function buildWikilinkTargetIndex(files: MarkdownFile[]): Set<string> {
 }
 
 function indexMentionsPage(indexContent: string, file: MarkdownFile): boolean {
-  if (!file.wiki) return false;
+  if (!file.atlas) return false;
 
-  const wikiRelative = withoutMarkdownExtension(file.wiki.relativePath);
+  const atlasRelative = withoutMarkdownExtension(file.atlas.relativePath);
   const rootRelative = withoutMarkdownExtension(file.relativePath);
   const basename = withoutMarkdownExtension(path.posix.basename(file.relativePath));
   const needles = [
-    file.wiki.relativePath,
-    wikiRelative,
+    file.atlas.relativePath,
+    atlasRelative,
     file.relativePath,
     rootRelative,
-    `[[${wikiRelative}]]`,
+    `[[${atlasRelative}]]`,
     `[[${basename}]]`,
-    `](${file.wiki.relativePath})`,
-    `](${wikiRelative}.md)`,
+    `](${file.atlas.relativePath})`,
+    `](${atlasRelative}.md)`,
     `](${rootRelative}.md)`
   ];
 
@@ -285,19 +303,19 @@ function cleanMarkdownLinkTarget(target: string): string | undefined {
   }
 }
 
-function extractWikilinkTargets(content: string): string[] {
+function extractInternalLinkTargets(content: string): string[] {
   const targets: string[] = [];
-  const wikilinkPattern = /\[\[([^\]\n]+)\]\]/g;
+  const internalLinkPattern = /\[\[([^\]\n]+)\]\]/g;
   let match: RegExpExecArray | null;
 
-  while ((match = wikilinkPattern.exec(content)) !== null) {
+  while ((match = internalLinkPattern.exec(content)) !== null) {
     targets.push(match[1]);
   }
 
   return targets;
 }
 
-function normalizeWikilinkTarget(target: string): string | undefined {
+function normalizeInternalLinkTarget(target: string): string | undefined {
   const normalized = target
     .split('|')[0]
     .split('#')[0]
@@ -313,16 +331,13 @@ function firstHeading(content: string): string | undefined {
   return match?.[1]?.trim();
 }
 
-function isSpecialWikiFile(file: MarkdownFile): boolean {
-  const relativePath = file.wiki?.relativePath;
+function isSpecialAtlasFile(file: MarkdownFile): boolean {
+  const relativePath = file.atlas?.relativePath;
   return relativePath === 'index.md' || relativePath === 'log.md';
 }
 
 function configuredAreaRoots(rootDir: string, config: WrenConfig): string[] {
-  return [
-    path.resolve(rootDir, config.areas.recap.path),
-    ...Object.values(config.areas.wiki).map((area) => path.resolve(rootDir, area.path))
-  ];
+  return [path.resolve(rootDir, config.areas.recap.path), path.resolve(rootDir, config.areas.atlas.path)];
 }
 
 async function isDirectory(filePath: string): Promise<boolean> {

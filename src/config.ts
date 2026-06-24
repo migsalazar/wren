@@ -4,6 +4,7 @@ import { isHiddenOrSystemPath, pathsOverlap } from './sources.js';
 
 export interface SourceArea {
   path: string;
+  atlasSection?: string;
 }
 
 export interface WrenConfig {
@@ -12,11 +13,13 @@ export interface WrenConfig {
     recap: {
       path: string;
     };
-    wiki: Record<string, { path: string }>;
+    atlas: {
+      path: string;
+      defaultSection: string;
+    };
   };
   sources: SourceArea[];
   useBm25: boolean;
-  defaultWiki: string;
 }
 
 export const CONFIG_PATH = path.join('.wren', 'config.json');
@@ -46,41 +49,31 @@ function validateConfig(value: unknown): WrenConfig {
   if (typeof value.areas.recap.path !== 'string' || value.areas.recap.path.length === 0) {
     throw new Error(`${CONFIG_PATH} must define areas.recap.path.`);
   }
-  const recapPath = validateRelativePath(value.areas.recap.path, 'areas.recap.path');
-  if (!isRecord(value.areas.wiki)) throw new Error(`${CONFIG_PATH} must define areas.wiki.`);
-  if (typeof value.defaultWiki !== 'string' || value.defaultWiki.length === 0) {
-    throw new Error(`${CONFIG_PATH} must define defaultWiki.`);
-  }
-  const defaultWiki = value.defaultWiki;
-  if (!isRecord(value.areas.wiki[defaultWiki])) {
-    throw new Error(`${CONFIG_PATH} defaultWiki must reference an area in areas.wiki.`);
-  }
+  const recapPath = validateAreaPath(value.areas.recap.path, 'areas.recap.path');
 
-  const wikiAreas: Record<string, { path: string }> = {};
-  const wikiPaths = new Map<string, string>();
-  for (const [name, wiki] of Object.entries(value.areas.wiki)) {
-    if (!isRecord(wiki)) throw new Error(`${CONFIG_PATH} areas.wiki.${name} must be a JSON object.`);
-    if (typeof wiki.path !== 'string' || wiki.path.length === 0) {
-      throw new Error(`${CONFIG_PATH} must define areas.wiki.${name}.path.`);
-    }
-    const wikiPath = validateRelativePath(wiki.path, `areas.wiki.${name}.path`);
-    wikiAreas[name] = { path: wikiPath };
-    wikiPaths.set(name, wikiPath);
+  if (!isRecord(value.areas.atlas)) throw new Error(`${CONFIG_PATH} must define areas.atlas.`);
+  if (typeof value.areas.atlas.path !== 'string' || value.areas.atlas.path.length === 0) {
+    throw new Error(`${CONFIG_PATH} must define areas.atlas.path.`);
   }
+  const atlasPath = validateAreaPath(value.areas.atlas.path, 'areas.atlas.path');
 
-  validateAreaBoundaries(recapPath, wikiPaths);
-  const sources = validateSources(value.sources, recapPath, wikiPaths);
+  if (typeof value.areas.atlas.defaultSection !== 'string' || value.areas.atlas.defaultSection.length === 0) {
+    throw new Error(`${CONFIG_PATH} must define areas.atlas.defaultSection.`);
+  }
+  const defaultSection = validateAtlasSection(value.areas.atlas.defaultSection, 'areas.atlas.defaultSection');
+
+  validateAreaBoundaries(recapPath, atlasPath);
+  const sources = validateSources(value.sources, recapPath, atlasPath, defaultSection);
   const useBm25 = validateUseBm25(value.useBm25);
 
   return {
     version: 1,
     areas: {
       recap: { path: recapPath },
-      wiki: wikiAreas
+      atlas: { path: atlasPath, defaultSection }
     },
     sources,
-    useBm25,
-    defaultWiki
+    useBm25
   };
 }
 
@@ -102,11 +95,31 @@ function validateRelativePath(value: string, field: string): string {
   return segments.join('/');
 }
 
-function validateAreaBoundaries(recapPath: string, wikiPaths: Map<string, string>): void {
-  for (const [name, wikiPath] of wikiPaths) {
-    if (pathsOverlap(recapPath, wikiPath)) {
-      throw new Error(`${CONFIG_PATH} areas.recap.path must not overlap areas.wiki.${name}.path.`);
-    }
+function validateAreaPath(value: string, field: string): string {
+  const areaPath = validateRelativePath(value, field);
+  if (isHiddenOrSystemPath(areaPath)) {
+    throw new Error(`${CONFIG_PATH} ${field} must not point to a hidden or system folder.`);
+  }
+  return areaPath;
+}
+
+function validateAtlasSection(value: string, field: string): string {
+  const section = validateRelativePath(value, field);
+  if (isHiddenOrSystemPath(section)) {
+    throw new Error(`${CONFIG_PATH} ${field} must not point to a hidden or system folder.`);
+  }
+
+  const firstSegment = section.split('/')[0]?.toLowerCase();
+  if (firstSegment === 'index.md' || firstSegment === 'log.md') {
+    throw new Error(`${CONFIG_PATH} ${field} must not start with reserved atlas file name: ${firstSegment}.`);
+  }
+
+  return section;
+}
+
+function validateAreaBoundaries(recapPath: string, atlasPath: string): void {
+  if (pathsOverlap(recapPath, atlasPath)) {
+    throw new Error(`${CONFIG_PATH} areas.recap.path must not overlap areas.atlas.path.`);
   }
 }
 
@@ -116,8 +129,8 @@ function validateUseBm25(value: unknown): boolean {
   return value;
 }
 
-function validateSources(value: unknown, recapPath: string, wikiPaths: Map<string, string>): SourceArea[] {
-  if (value === undefined) return [{ path: recapPath }];
+function validateSources(value: unknown, recapPath: string, atlasPath: string, defaultSection: string): SourceArea[] {
+  if (value === undefined) return [{ path: recapPath, atlasSection: defaultSection }];
   if (!Array.isArray(value)) throw new Error(`${CONFIG_PATH} sources must be an array.`);
   if (value.length === 0) throw new Error(`${CONFIG_PATH} sources must not be empty.`);
 
@@ -135,18 +148,24 @@ function validateSources(value: unknown, recapPath: string, wikiPaths: Map<strin
       throw new Error(`${CONFIG_PATH} sources[${index}].path must not point to a hidden or system folder.`);
     }
 
-    for (const [name, wikiPath] of wikiPaths) {
-      if (pathsOverlap(sourcePath, wikiPath)) {
-        throw new Error(`${CONFIG_PATH} sources[${index}].path must not overlap areas.wiki.${name}.path.`);
-      }
+    if (pathsOverlap(sourcePath, atlasPath)) {
+      throw new Error(`${CONFIG_PATH} sources[${index}].path must not overlap areas.atlas.path.`);
     }
 
     if (seen.has(sourcePath)) throw new Error(`${CONFIG_PATH} sources must not contain duplicate paths: ${sourcePath}.`);
     seen.add(sourcePath);
-    sources.push({ path: sourcePath });
+
+    const atlasSection = validateOptionalAtlasSection(source.atlasSection, `sources[${index}].atlasSection`);
+    sources.push(atlasSection ? { path: sourcePath, atlasSection } : { path: sourcePath });
   }
 
   return sources;
+}
+
+function validateOptionalAtlasSection(value: unknown, field: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.length === 0) throw new Error(`${CONFIG_PATH} must define ${field}.`);
+  return validateAtlasSection(value, field);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

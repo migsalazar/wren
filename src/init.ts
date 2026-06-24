@@ -10,8 +10,9 @@ interface InitResult {
 }
 
 const DEFAULT_RECAP_PATH = 'recap';
-const DEFAULT_WIKI_NAME = 'default';
-const DEFAULT_WIKI_PATH = 'wiki';
+const DEFAULT_ATLAS_PATH = 'atlas';
+const DEFAULT_ATLAS_SECTION = 'general';
+const RESERVED_ATLAS_ROOT_FILES = new Set(['index.md', 'log.md']);
 
 const TEMPLATE_FILES = [
   { from: path.join('templates', '.wren', 'workflows', 'recap.md'), to: path.join('.wren', 'workflows', 'recap.md') },
@@ -19,9 +20,9 @@ const TEMPLATE_FILES = [
   { from: path.join('templates', '.wren', 'workflows', 'reflect.md'), to: path.join('.wren', 'workflows', 'reflect.md') },
   { from: path.join('templates', '.wren', 'workflows', 'lint.md'), to: path.join('.wren', 'workflows', 'lint.md') },
   { from: path.join('templates', '.wren', 'templates', 'recap.md'), to: path.join('.wren', 'templates', 'recap.md') },
-  { from: path.join('templates', '.wren', 'templates', 'wiki.md'), to: path.join('.wren', 'templates', 'wiki.md') },
-  { from: path.join('templates', 'wiki', 'index.md'), to: path.join('wiki', 'index.md') },
-  { from: path.join('templates', 'wiki', 'log.md'), to: path.join('wiki', 'log.md') },
+  { from: path.join('templates', '.wren', 'templates', 'atlas.md'), to: path.join('.wren', 'templates', 'atlas.md') },
+  { from: path.join('templates', 'atlas', 'index.md'), to: path.join('atlas', 'index.md') },
+  { from: path.join('templates', 'atlas', 'log.md'), to: path.join('atlas', 'log.md') },
   { from: path.join('templates', 'AGENTS.md'), to: 'AGENTS.md' }
 ];
 
@@ -73,18 +74,26 @@ export function formatInitResult(result: InitResult): string {
 }
 
 async function buildInitialConfig(rootDir: string): Promise<{ content: string; sources: string[] }> {
-  const discoveredSources = await discoverTopLevelSourceFolders(rootDir, [DEFAULT_WIKI_PATH]);
+  const discoveredSources = await discoverTopLevelSourceFolders(rootDir, [DEFAULT_ATLAS_PATH]);
   const sources = uniquePaths([DEFAULT_RECAP_PATH, ...discoveredSources]);
   const config = {
     version: 1,
     areas: {
       recap: { path: DEFAULT_RECAP_PATH },
-      wiki: { [DEFAULT_WIKI_NAME]: { path: DEFAULT_WIKI_PATH } }
+      atlas: { path: DEFAULT_ATLAS_PATH, defaultSection: DEFAULT_ATLAS_SECTION }
     },
-    sources: sources.map((sourcePath) => ({ path: sourcePath })),
-    useBm25: true,
-    defaultWiki: DEFAULT_WIKI_NAME
+    sources: sources.map((sourcePath) => ({
+      path: sourcePath,
+      atlasSection: atlasSectionForSourcePath(sourcePath)
+    })),
+    useBm25: true
   };
 
   return { content: `${JSON.stringify(config, null, 2)}\n`, sources };
+}
+
+function atlasSectionForSourcePath(sourcePath: string): string {
+  if (sourcePath === DEFAULT_RECAP_PATH) return DEFAULT_ATLAS_SECTION;
+  if (RESERVED_ATLAS_ROOT_FILES.has(sourcePath.toLowerCase())) return `source-${path.posix.basename(sourcePath, '.md')}`;
+  return sourcePath;
 }

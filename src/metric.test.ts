@@ -15,10 +15,10 @@ test('appendMetric appends JSONL events', async () => {
     await appendMetric(root, {
       event: 'recall',
       query: 'basil watering',
-      filesRead: ['wiki/basil.md', 'notes/basil-irrigation.md'],
+      filesRead: ['atlas/basil.md', 'notes/basil-irrigation.md'],
       area: 'sources'
     });
-    await appendMetric(root, { event: 'reflect', filesWritten: ['wiki/basil.md'] });
+    await appendMetric(root, { event: 'reflect', filesWritten: ['atlas/basil.md'] });
 
     const lines = await readMetricLines(root);
 
@@ -30,11 +30,11 @@ test('appendMetric appends JSONL events', async () => {
     assertIsoTimestamp(first.ts);
     assert.equal(first.event, 'recall');
     assert.equal(first.query, 'basil watering');
-    assert.deepEqual(first.filesRead, ['wiki/basil.md', 'notes/basil-irrigation.md']);
+    assert.deepEqual(first.filesRead, ['atlas/basil.md', 'notes/basil-irrigation.md']);
     assert.equal(first.area, 'sources');
     assertIsoTimestamp(second.ts);
     assert.equal(second.event, 'reflect');
-    assert.deepEqual(second.filesWritten, ['wiki/basil.md']);
+    assert.deepEqual(second.filesWritten, ['atlas/basil.md']);
     assert.equal('query' in second, false);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -64,10 +64,10 @@ test('appendMetric stamps ts and ignores caller-supplied ts', async () => {
 test('resolveMetricInput collects repeated read values', () => {
   const metric = resolveMetricInput({
     event: 'recall',
-    filesRead: ['wiki/basil.md', 'notes/basil-irrigation.md']
+    filesRead: ['atlas/basil.md', 'notes/basil-irrigation.md']
   });
 
-  assert.deepEqual(metric.filesRead, ['wiki/basil.md', 'notes/basil-irrigation.md']);
+  assert.deepEqual(metric.filesRead, ['atlas/basil.md', 'notes/basil-irrigation.md']);
 });
 
 test('resolveMetricInput rejects unknown events', () => {
@@ -82,7 +82,7 @@ test('wren metric CLI collects repeated read flags', async () => {
       '--event',
       'recall',
       '--read',
-      'wiki/basil.md',
+      'atlas/basil.md',
       '--read',
       'notes/basil-irrigation.md'
     ]);
@@ -91,7 +91,7 @@ test('wren metric CLI collects repeated read flags', async () => {
     assert.match(result.stdout, /Logged metric: \.wren\/cache\/metrics\.jsonl/);
     const [line] = await readMetricLines(root);
     assert.ok(line);
-    assert.deepEqual(line.filesRead, ['wiki/basil.md', 'notes/basil-irrigation.md']);
+    assert.deepEqual(line.filesRead, ['atlas/basil.md', 'notes/basil-irrigation.md']);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -105,7 +105,7 @@ test('wren metric CLI rejects unexpected positional paths', async () => {
       '--event',
       'recall',
       '--read',
-      'wiki/basil.md',
+      'atlas/basil.md',
       'notes/basil-irrigation.md'
     ]);
 

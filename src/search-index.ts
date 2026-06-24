@@ -7,7 +7,7 @@ import { pathExists, readText, toPosixPath } from './files.js';
 import { countTerms, extractHeadings, extractTags, tokenize } from './search-text.js';
 import { isHiddenOrSystemPath } from './sources.js';
 
-export type IndexedArea = 'wiki' | 'source';
+export type IndexedArea = 'atlas' | 'source';
 
 export interface IndexedDocument {
   path: string;
@@ -39,7 +39,7 @@ interface IndexedFile {
 export interface IndexReport {
   indexPath: string;
   documentCount: number;
-  wikiCount: number;
+  atlasCount: number;
   sourceCount: number;
   warnings: string[];
 }
@@ -59,7 +59,7 @@ export async function buildAndWriteSearchIndex(rootDir: string, config: WrenConf
   return {
     indexPath: SEARCH_INDEX_PATH,
     documentCount: index.documents.length,
-    wikiCount: index.documents.filter((document) => document.area === 'wiki').length,
+    atlasCount: index.documents.filter((document) => document.area === 'atlas').length,
     sourceCount: index.documents.filter((document) => document.area === 'source').length,
     warnings
   };
@@ -132,7 +132,7 @@ export async function getSearchIndexStatus(rootDir: string, config: WrenConfig):
     return {
       status: 'stale',
       path: SEARCH_INDEX_PATH,
-      reason: 'configured wiki or source folders changed',
+      reason: 'configured atlas or source folders changed',
       documentCount: index.documents.length
     };
   }
@@ -168,16 +168,14 @@ async function collectIndexedFiles(
 ): Promise<IndexedFile[]> {
   const files = new Map<string, IndexedFile>();
 
-  for (const wiki of Object.values(config.areas.wiki)) {
-    await collectAreaFiles({
-      rootDir,
-      relativeRoot: wiki.path,
-      area: 'wiki',
-      files,
-      warnings,
-      missingIsWarning: true
-    });
-  }
+  await collectAreaFiles({
+    rootDir,
+    relativeRoot: config.areas.atlas.path,
+    area: 'atlas',
+    files,
+    warnings,
+    missingIsWarning: true
+  });
 
   for (const source of config.sources) {
     await collectAreaFiles({
@@ -297,7 +295,7 @@ function isIndexedDocument(value: unknown): value is IndexedDocument {
   if (!isRecord(value)) return false;
   return (
     typeof value.path === 'string' &&
-    (value.area === 'wiki' || value.area === 'source') &&
+    (value.area === 'atlas' || value.area === 'source') &&
     typeof value.title === 'string' &&
     Array.isArray(value.headings) &&
     value.headings.every((heading) => typeof heading === 'string') &&

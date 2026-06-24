@@ -38,22 +38,18 @@ export async function runDoctor(rootDir: string): Promise<DoctorReport> {
     return summarize(checks);
   }
 
-  const wikiPath = config.areas.wiki[config.defaultWiki]?.path;
-  if (!wikiPath) {
-    checks.push(error(`default wiki not configured: ${config.defaultWiki}`));
-    return summarize(checks);
-  }
-
-  checks.push(ok(`default wiki configured: ${wikiPath}`));
-  await checkPath(checks, rootDir, wikiPath, 'wiki directory', 'error');
-  await checkPath(checks, rootDir, path.join(wikiPath, 'index.md'), 'wiki index', 'error');
-  await checkPath(checks, rootDir, path.join(wikiPath, 'log.md'), 'wiki log', 'error');
+  const atlasPath = config.areas.atlas.path;
+  checks.push(ok(`atlas configured: ${atlasPath}`));
+  checks.push(ok(`atlas default section configured: ${config.areas.atlas.defaultSection}`));
+  await checkPath(checks, rootDir, atlasPath, 'atlas directory', 'error');
+  await checkPath(checks, rootDir, path.join(atlasPath, 'index.md'), 'atlas index', 'error');
+  await checkPath(checks, rootDir, path.join(atlasPath, 'log.md'), 'atlas log', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'recap.md'), 'recap workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'recall.md'), 'recall workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'reflect.md'), 'reflect workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'workflows', 'lint.md'), 'lint workflow', 'error');
   await checkPath(checks, rootDir, path.join('.wren', 'templates', 'recap.md'), 'recap template', 'error');
-  await checkPath(checks, rootDir, path.join('.wren', 'templates', 'wiki.md'), 'wiki template', 'error');
+  await checkPath(checks, rootDir, path.join('.wren', 'templates', 'atlas.md'), 'atlas template', 'error');
   await checkPath(checks, rootDir, config.areas.recap.path, 'recap directory', 'warn');
   await checkSourceFolders(checks, rootDir, config);
   await checkUnconfiguredSourceFolders(checks, rootDir, config);
@@ -86,7 +82,8 @@ function summarize(checks: DoctorCheck[]): DoctorReport {
 
 async function checkSourceFolders(checks: DoctorCheck[], rootDir: string, config: WrenConfig): Promise<void> {
   for (const source of config.sources) {
-    checks.push(ok(`source configured: ${source.path}`));
+    const section = source.atlasSection ?? config.areas.atlas.defaultSection;
+    checks.push(ok(`source configured: ${source.path} -> ${config.areas.atlas.path}/${section}`));
 
     const absolutePath = path.join(rootDir, source.path);
     if (!(await pathExists(absolutePath))) {
@@ -108,9 +105,8 @@ async function checkUnconfiguredSourceFolders(
   rootDir: string,
   config: WrenConfig
 ): Promise<void> {
-  const wikiPaths = Object.values(config.areas.wiki).map((area) => area.path);
   const configuredSources = new Set(config.sources.map((source) => source.path));
-  const candidates = await discoverTopLevelSourceFolders(rootDir, wikiPaths);
+  const candidates = await discoverTopLevelSourceFolders(rootDir, [config.areas.atlas.path]);
 
   for (const candidate of candidates) {
     if (configuredSources.has(candidate)) continue;
