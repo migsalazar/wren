@@ -131,8 +131,8 @@ function readPositionals(args: string[], optionsWithValues = new Set(['--area', 
 
 function parseSearchArea(value: string | undefined): SearchArea {
   if (!value) return 'all';
-  if (value === 'wiki' || value === 'sources' || value === 'all') return value;
-  throw new Error('--area must be one of: wiki, sources, all.');
+  if (value === 'atlas' || value === 'sources' || value === 'all') return value;
+  throw new Error('--area must be one of: atlas, sources, all.');
 }
 
 function parsePositiveInteger(value: string, name: string): number {
@@ -170,7 +170,7 @@ Options:
   recap --title, -t    Optional recap title
   recap --tag          Optional tag, repeatable
   recap --stdin        Read recap body from stdin
-  search --area        wiki, sources, or all (default: all)
+  search --area        atlas, sources, or all (default: all)
   search --limit, -n   Maximum results (default: 10)
   search --json        Print JSON output
   metric --stdin       Read metric JSON object from stdin
@@ -178,7 +178,7 @@ Options:
   metric --query       Optional query string
   metric --read        Optional file read path, repeatable
   metric --write       Optional file written path, repeatable
-  metric --area        wiki, sources, or all
+  metric --area        atlas, sources, or all
 `);
 }
 

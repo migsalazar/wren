@@ -3,7 +3,7 @@
 ## Project Boundaries
 
 - This repo is Wren software/docs/tooling, not a Wren-managed vault.
-- Do not create personal notes, wiki pages, or vault content in this repo.
+- Do not create personal notes, personal knowledge pages, or vault content in this repo.
 - User vault content belongs in the user's Obsidian vault, not here.
 - Use `README.md` as the source of truth for Wren terminology and scope.
 

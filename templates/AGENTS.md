@@ -20,9 +20,9 @@ When the user invokes Wren, read and follow the matching local workflow:
 ## Boundaries
 
 - Configured Wren areas and source folders live in `.wren/config.json`.
-- Read configured wiki areas and `sources` as needed; read outside them only when the user explicitly provides files or paths.
+- Read the configured atlas root and `sources` as needed; read outside them only when the user explicitly provides files or paths.
 - Write only configured Wren areas and derived `.wren/cache/` files during normal workflows.
-- Create or save recap notes, update wiki synthesis, or perform other Wren workflow writes only when the user explicitly invokes the relevant Wren command or clearly asks to use Wren.
+- Create or save recap notes, update atlas synthesis, or perform other Wren workflow writes only when the user explicitly invokes the relevant Wren command or clearly asks to use Wren.
 - Edit `.wren/config.json`, workflows, or templates only when explicitly asked.
 - Do not rewrite existing notes unless explicitly asked.
 - Do not create or switch git branches as part of Wren.
@@ -33,7 +33,6 @@ When the user invokes Wren, read and follow the matching local workflow:
 ## Workflow Summary
 
 - `/wren recap`: create a source-level conversation note; refresh BM25 when enabled.
-- `/wren recall`: read `wiki/index.md`, relevant wiki pages, then source evidence as needed; append local metrics when available.
-- `/wren reflect`: update cited wiki synthesis plus `wiki/index.md` and `wiki/log.md`; append local metrics and refresh BM25 when enabled.
+- `/wren recall`: read the configured atlas root's `index.md`, relevant atlas pages, then source evidence as needed; append local metrics when available.
+- `/wren reflect`: update cited atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; append local metrics and refresh BM25 when enabled.
 - `/wren lint`: report health issues without silent rewrites.
-

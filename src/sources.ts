@@ -12,7 +12,7 @@ const SYSTEM_SOURCE_FOLDER_NAMES = new Set([
   'temp'
 ]);
 
-export async function discoverTopLevelSourceFolders(rootDir: string, wikiPaths: string[]): Promise<string[]> {
+export async function discoverTopLevelSourceFolders(rootDir: string, atlasPaths: string[]): Promise<string[]> {
   const entries = await readdir(rootDir, { withFileTypes: true });
   const folders: string[] = [];
 
@@ -20,8 +20,8 @@ export async function discoverTopLevelSourceFolders(rootDir: string, wikiPaths: 
     if (!entry.isDirectory()) continue;
 
     const relativePath = toPosixPath(entry.name);
-    if (isExcludedSourcePath(relativePath, wikiPaths)) continue;
-    if (!(await directoryContainsMarkdown(path.join(rootDir, relativePath), relativePath, wikiPaths))) continue;
+    if (isExcludedSourcePath(relativePath, atlasPaths)) continue;
+    if (!(await directoryContainsMarkdown(path.join(rootDir, relativePath), relativePath, atlasPaths))) continue;
 
     folders.push(relativePath);
   }
@@ -41,14 +41,14 @@ export function uniquePaths(paths: string[]): string[] {
   return [...new Set(paths)];
 }
 
-function isExcludedSourcePath(relativePath: string, wikiPaths: string[]): boolean {
-  return isHiddenOrSystemPath(relativePath) || wikiPaths.some((wikiPath) => pathsOverlap(relativePath, wikiPath));
+function isExcludedSourcePath(relativePath: string, atlasPaths: string[]): boolean {
+  return isHiddenOrSystemPath(relativePath) || atlasPaths.some((atlasPath) => pathsOverlap(relativePath, atlasPath));
 }
 
 async function directoryContainsMarkdown(
   absoluteDir: string,
   relativeDir: string,
-  wikiPaths: string[]
+  atlasPaths: string[]
 ): Promise<boolean> {
   const entries = await readdir(absoluteDir, { withFileTypes: true });
 
@@ -57,8 +57,8 @@ async function directoryContainsMarkdown(
     if (!entry.isDirectory()) continue;
 
     const childRelative = toPosixPath(path.join(relativeDir, entry.name));
-    if (isExcludedSourcePath(childRelative, wikiPaths)) continue;
-    if (await directoryContainsMarkdown(path.join(absoluteDir, entry.name), childRelative, wikiPaths)) return true;
+    if (isExcludedSourcePath(childRelative, atlasPaths)) continue;
+    if (await directoryContainsMarkdown(path.join(absoluteDir, entry.name), childRelative, atlasPaths)) return true;
   }
 
   return false;

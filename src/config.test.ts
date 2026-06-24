@@ -17,7 +17,7 @@ test('loadConfig reports missing config with init guidance', async () => {
 test('loadConfig validates required Wren areas', async () => {
   const root = await tempDir();
   try {
-    await writeConfig(root, { version: 1, areas: {}, defaultWiki: 'default' });
+    await writeConfig(root, { version: 1, areas: {} });
 
     await assert.rejects(loadConfig(root), /must define areas\.recap/);
   } finally {
@@ -25,26 +25,34 @@ test('loadConfig validates required Wren areas', async () => {
   }
 });
 
-test('loadConfig parses valid config', async () => {
+test('loadConfig parses valid config with atlas section mappings', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
+        atlas: { path: 'atlas', defaultSection: 'general' }
       },
-      sources: [{ path: 'recap' }, { path: 'notes' }],
-      useBm25: true,
-      defaultWiki: 'default'
+      sources: [
+        { path: 'recap', atlasSection: 'learnings' },
+        { path: 'work', atlasSection: 'work' },
+        { path: 'books', atlasSection: 'learnings' }
+      ],
+      useBm25: true
     });
 
     const config = await loadConfig(root);
 
     assert.equal(config.version, 1);
     assert.equal(config.areas.recap.path, 'recap');
-    assert.equal(config.areas.wiki.default.path, 'wiki');
-    assert.deepEqual(config.sources, [{ path: 'recap' }, { path: 'notes' }]);
+    assert.equal(config.areas.atlas.path, 'atlas');
+    assert.equal(config.areas.atlas.defaultSection, 'general');
+    assert.deepEqual(config.sources, [
+      { path: 'recap', atlasSection: 'learnings' },
+      { path: 'work', atlasSection: 'work' },
+      { path: 'books', atlasSection: 'learnings' }
+    ]);
     assert.equal(config.useBm25, true);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -58,9 +66,8 @@ test('loadConfig rejects unsafe configured paths', async () => {
       version: 1,
       areas: {
         recap: { path: '../recap' },
-        wiki: { default: { path: 'wiki' } }
-      },
-      defaultWiki: 'default'
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
     });
 
     await assert.rejects(loadConfig(root), /areas\.recap\.path must not contain "\.\."/);
@@ -69,19 +76,90 @@ test('loadConfig rejects unsafe configured paths', async () => {
   }
 });
 
-test('loadConfig rejects absolute wiki paths', async () => {
+test('loadConfig rejects absolute atlas paths', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: '/tmp/wiki' } }
-      },
-      defaultWiki: 'default'
+        atlas: { path: '/tmp/atlas', defaultSection: 'general' }
+      }
     });
 
-    await assert.rejects(loadConfig(root), /areas\.wiki\.default\.path must be a relative path/);
+    await assert.rejects(loadConfig(root), /areas\.atlas\.path must be a relative path/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects hidden or system area roots', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: '.wren/recap' },
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
+    });
+
+    await assert.rejects(loadConfig(root), /areas\.recap\.path must not point to a hidden or system folder/);
+
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'node_modules/atlas', defaultSection: 'general' }
+      }
+    });
+
+    await assert.rejects(loadConfig(root), /areas\.atlas\.path must not point to a hidden or system folder/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects invalid default atlas sections', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'atlas', defaultSection: '../general' }
+      }
+    });
+
+    await assert.rejects(loadConfig(root), /areas\.atlas\.defaultSection must not contain "\.\."/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects atlas sections that collide with root atlas files', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'atlas', defaultSection: 'index.md' }
+      }
+    });
+
+    await assert.rejects(loadConfig(root), /areas\.atlas\.defaultSection must not start with reserved atlas file name: index\.md/);
+
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      },
+      sources: [{ path: 'recap', atlasSection: 'log.md/archive' }]
+    });
+
+    await assert.rejects(loadConfig(root), /sources\[0\]\.atlasSection must not start with reserved atlas file name: log\.md/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -94,9 +172,8 @@ test('loadConfig rejects paths with surrounding whitespace', async () => {
       version: 1,
       areas: {
         recap: { path: ' recap' },
-        wiki: { default: { path: 'wiki' } }
-      },
-      defaultWiki: 'default'
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
     });
 
     await assert.rejects(loadConfig(root), /areas\.recap\.path must not contain surrounding whitespace/);
@@ -105,19 +182,18 @@ test('loadConfig rejects paths with surrounding whitespace', async () => {
   }
 });
 
-test('loadConfig rejects overlapping recap and wiki paths', async () => {
+test('loadConfig rejects overlapping recap and atlas paths', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
-        recap: { path: 'wiki/recap' },
-        wiki: { default: { path: 'wiki' } }
-      },
-      defaultWiki: 'default'
+        recap: { path: 'atlas/recap' },
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
     });
 
-    await assert.rejects(loadConfig(root), /areas\.recap\.path must not overlap areas\.wiki\.default\.path/);
+    await assert.rejects(loadConfig(root), /areas\.recap\.path must not overlap areas\.atlas\.path/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -130,9 +206,8 @@ test('loadConfig rejects empty path segments', async () => {
       version: 1,
       areas: {
         recap: { path: 'recap//daily' },
-        wiki: { default: { path: 'wiki' } }
-      },
-      defaultWiki: 'default'
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
     });
 
     await assert.rejects(loadConfig(root), /areas\.recap\.path must not contain empty path segments/);
@@ -148,9 +223,8 @@ test('loadConfig defaults missing useBm25 to false', async () => {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
-      },
-      defaultWiki: 'default'
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
     });
 
     const config = await loadConfig(root);
@@ -168,10 +242,9 @@ test('loadConfig rejects non-boolean useBm25', async () => {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
+        atlas: { path: 'atlas', defaultSection: 'general' }
       },
-      useBm25: 'yes',
-      defaultWiki: 'default'
+      useBm25: 'yes'
     });
 
     await assert.rejects(loadConfig(root), /useBm25 must be a boolean/);
@@ -180,40 +253,38 @@ test('loadConfig rejects non-boolean useBm25', async () => {
   }
 });
 
-test('loadConfig defaults missing sources to the recap path', async () => {
+test('loadConfig defaults missing sources to the recap path and default atlas section', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
-      },
-      defaultWiki: 'default'
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      }
     });
 
     const config = await loadConfig(root);
 
-    assert.deepEqual(config.sources, [{ path: 'recap' }]);
+    assert.deepEqual(config.sources, [{ path: 'recap', atlasSection: 'general' }]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test('loadConfig rejects source paths that overlap wiki paths', async () => {
+test('loadConfig rejects source paths that overlap atlas paths', async () => {
   const root = await tempDir();
   try {
     await writeConfig(root, {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
+        atlas: { path: 'atlas', defaultSection: 'general' }
       },
-      sources: [{ path: 'wiki' }],
-      defaultWiki: 'default'
+      sources: [{ path: 'atlas' }]
     });
 
-    await assert.rejects(loadConfig(root), /sources\[0\]\.path must not overlap areas\.wiki\.default\.path/);
+    await assert.rejects(loadConfig(root), /sources\[0\]\.path must not overlap areas\.atlas\.path/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -226,13 +297,30 @@ test('loadConfig rejects hidden source paths', async () => {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
+        atlas: { path: 'atlas', defaultSection: 'general' }
       },
-      sources: [{ path: '.obsidian' }],
-      defaultWiki: 'default'
+      sources: [{ path: '.obsidian' }]
     });
 
     await assert.rejects(loadConfig(root), /sources\[0\]\.path must not point to a hidden or system folder/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig rejects invalid source atlas sections', async () => {
+  const root = await tempDir();
+  try {
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      },
+      sources: [{ path: 'recap', atlasSection: '.hidden' }]
+    });
+
+    await assert.rejects(loadConfig(root), /sources\[0\]\.atlasSection must not point to a hidden or system folder/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -245,10 +333,9 @@ test('loadConfig rejects duplicate source paths', async () => {
       version: 1,
       areas: {
         recap: { path: 'recap' },
-        wiki: { default: { path: 'wiki' } }
+        atlas: { path: 'atlas', defaultSection: 'general' }
       },
-      sources: [{ path: 'notes' }, { path: 'notes' }],
-      defaultWiki: 'default'
+      sources: [{ path: 'notes' }, { path: 'notes' }]
     });
 
     await assert.rejects(loadConfig(root), /sources must not contain duplicate paths: notes/);

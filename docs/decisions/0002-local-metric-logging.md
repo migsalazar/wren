@@ -4,7 +4,7 @@ Status: Accepted
 
 ## Context
 
-Wren needs a small measurement primitive so future analysis can evaluate whether the recap → reflect → recall loop is useful. The first target metric is reflect-citation rate: whether wiki pages created or updated by reflection are later read during recalls.
+Wren needs a small measurement primitive so future analysis can evaluate whether the recap → reflect → recall loop is useful. The first target metric is reflect-citation rate: whether atlas pages created or updated by reflection are later read during recalls.
 
 This requires recording workflow events, queries, and touched paths, but Wren should not introduce network telemetry, dashboards, aggregation, or content collection as part of the primitive.
 
@@ -21,7 +21,7 @@ Metric records may include:
 - `query`,
 - `filesRead`,
 - `filesWritten`,
-- `area`: `wiki`, `sources`, or `all`.
+- `area`: `atlas`, `sources`, or `all`.
 
 Metric records store paths and queries only. They must not store file contents.
 

@@ -13,13 +13,13 @@ import {
   SEARCH_INDEX_PATH
 } from './search.js';
 
-test('buildAndWriteSearchIndex indexes configured wiki and source markdown', async () => {
+test('buildAndWriteSearchIndex indexes configured atlas and source markdown', async () => {
   const root = await fixtureVault();
   try {
     const report = await buildAndWriteSearchIndex(root, await loadConfig(root));
 
-    assert.equal(report.documentCount, 5);
-    assert.equal(report.wikiCount, 2);
+    assert.equal(report.documentCount, 6);
+    assert.equal(report.atlasCount, 3);
     assert.equal(report.sourceCount, 3);
     assert.deepEqual(report.warnings, []);
     assert.match(await readFile(path.join(root, SEARCH_INDEX_PATH), 'utf8'), /notes\/sky\.md/);
@@ -46,16 +46,16 @@ test('runSearch ranks source documents with BM25 and field boosts', async () => 
   }
 });
 
-test('runSearch filters wiki and sources areas', async () => {
+test('runSearch filters atlas and sources areas', async () => {
   const root = await fixtureVault();
   try {
     await buildAndWriteSearchIndex(root, await loadConfig(root));
 
-    const wikiReport = await runSearch(root, { query: 'sky', area: 'wiki', limit: 5 });
+    const atlasReport = await runSearch(root, { query: 'sky', area: 'atlas', limit: 5 });
     const sourceReport = await runSearch(root, { query: 'sky', area: 'sources', limit: 5 });
 
-    assert.ok(wikiReport.results.length > 0);
-    assert.ok(wikiReport.results.every((result) => result.area === 'wiki'));
+    assert.ok(atlasReport.results.length > 0);
+    assert.ok(atlasReport.results.every((result) => result.area === 'atlas'));
     assert.ok(sourceReport.results.length > 0);
     assert.ok(sourceReport.results.every((result) => result.area === 'source'));
   } finally {
@@ -132,10 +132,22 @@ test('formatIndexReport and formatSearchReport render agent-readable output', as
     const indexReport = await buildAndWriteSearchIndex(root, await loadConfig(root));
     const searchReport = await runSearch(root, { query: 'sky', area: 'all', limit: 1 });
 
-    assert.match(formatIndexReport(indexReport), /✓ indexed 5 Markdown files/);
+    assert.match(formatIndexReport(indexReport), /✓ indexed 6 Markdown files/);
     assert.match(formatSearchReport(searchReport), /^Wren search/);
     assert.match(formatSearchReport(searchReport), /Query: sky/);
     assert.match(formatSearchReport(searchReport), /matched:/);
+    assert.match(
+      formatSearchReport({
+        query: 'example',
+        area: 'all',
+        searchedFiles: 2,
+        results: [
+          { path: 'atlas/one.md', area: 'atlas', score: 1, matched: ['bm25'] },
+          { path: 'notes/two.md', area: 'source', score: 0.5, matched: ['bm25'] }
+        ]
+      }),
+      /Result: 2 matches/
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -236,21 +248,28 @@ async function fixtureVault(): Promise<string> {
     version: 1,
     areas: {
       recap: { path: 'recap' },
-      wiki: { default: { path: 'wiki' } }
+      atlas: { path: 'atlas', defaultSection: 'general' }
     },
-    sources: [{ path: 'notes' }, { path: 'recap' }],
-    useBm25: true,
-    defaultWiki: 'default'
+    sources: [
+      { path: 'notes', atlasSection: 'work' },
+      { path: 'recap', atlasSection: 'general' }
+    ],
+    useBm25: true
   });
 
-  await mkdir(path.join(root, 'wiki'), { recursive: true });
+  await mkdir(path.join(root, 'atlas', 'work'), { recursive: true });
   await mkdir(path.join(root, 'notes'), { recursive: true });
   await mkdir(path.join(root, 'recap'), { recursive: true });
 
-  await writeFile(path.join(root, 'wiki', 'index.md'), '# Wren Index\n\n- [[sky]] — summary about sky notes.\n', 'utf8');
+  await writeFile(path.join(root, 'atlas', 'index.md'), '# Wren Atlas\n\n- [[sky]] — summary about sky notes.\n', 'utf8');
   await writeFile(
-    path.join(root, 'wiki', 'sky.md'),
+    path.join(root, 'atlas', 'sky.md'),
     '# Sky Synthesis\n\nThe sky synthesis cites source notes.\n\n## Sources\n\n- [[sky]]\n',
+    'utf8'
+  );
+  await writeFile(
+    path.join(root, 'atlas', 'work', 'sky-work.md'),
+    '# Work Sky Synthesis\n\nWork atlas synthesis also mentions the sky.\n\n## Sources\n\n- [[sky]]\n',
     'utf8'
   );
   await writeFile(

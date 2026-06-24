@@ -47,7 +47,7 @@ temp/
 
 # Accidental Wren vault content in repo root
 /.wren/
-/wiki/
+/atlas/
 /recap/
 
 # Extra OS/editor temp files
