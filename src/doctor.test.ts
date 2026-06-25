@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { loadConfig } from './config.js';
 import { formatDoctorReport, runDoctor } from './doctor.js';
+import { LEARNING_CANDIDATES_DIR } from './learning.js';
 import { initWren } from './init.js';
 import { buildAndWriteSearchIndex } from './search.js';
 
@@ -87,6 +88,7 @@ test('runDoctor passes without warnings when recap directory and search index ex
     assert.equal(report.errors, 0);
     assert.equal(report.warnings, 0);
     assert.ok(report.checks.some((check) => check.message.startsWith('search index fresh:')));
+    assert.ok(report.checks.some((check) => check.message === 'learning candidates: none (.wren/cache/learning/candidates)'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -128,6 +130,120 @@ test('runDoctor warns when search index is stale', async () => {
     assert.equal(report.errors, 0);
     assert.equal(report.warnings, 1);
     assert.ok(report.checks.some((check) => check.message === 'search index stale: new Markdown file: recap/new.md'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('runDoctor reports valid pending learning candidates as ok', async () => {
+  const root = await tempDir();
+  try {
+    await initWren(root, packageRoot);
+    await mkdir(path.join(root, 'recap'));
+    await buildAndWriteSearchIndex(root, await loadConfig(root));
+    await writeLearningCandidate(root, 'ask-before-cross-section-reflect', validLearningCandidate('ask-before-cross-section-reflect'));
+
+    const report = await runDoctor(root);
+
+    assert.equal(report.errors, 0);
+    assert.equal(report.warnings, 0);
+    assert.ok(report.checks.some((check) => check.message === 'learning candidates pending: 1 (review with: wren learn list)'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('runDoctor warns when learning candidates are not protected by cache gitignore', async () => {
+  const root = await tempDir();
+  try {
+    await initWren(root, packageRoot);
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      },
+      useBm25: false
+    });
+    await mkdir(path.join(root, 'recap'));
+    await writeLearningCandidate(root, 'ask-before-cross-section-reflect', validLearningCandidate('ask-before-cross-section-reflect'));
+
+    const report = await runDoctor(root);
+
+    assert.equal(report.errors, 0);
+    assert.equal(report.warnings, 1);
+    assert.ok(
+      report.checks.some(
+        (check) => check.message === 'learning candidate cache is not ignored: .wren/cache/.gitignore missing'
+      )
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('runDoctor warns when learning candidate cache gitignore content is unexpected', async () => {
+  const root = await tempDir();
+  try {
+    await initWren(root, packageRoot);
+    await writeConfig(root, {
+      version: 1,
+      areas: {
+        recap: { path: 'recap' },
+        atlas: { path: 'atlas', defaultSection: 'general' }
+      },
+      useBm25: false
+    });
+    await mkdir(path.join(root, 'recap'));
+    await writeLearningCandidate(root, 'ask-before-cross-section-reflect', validLearningCandidate('ask-before-cross-section-reflect'));
+    await writeFile(path.join(root, '.wren', 'cache', '.gitignore'), 'unexpected\n', 'utf8');
+
+    const report = await runDoctor(root);
+
+    assert.equal(report.errors, 0);
+    assert.equal(report.warnings, 1);
+    assert.ok(
+      report.checks.some(
+        (check) => check.message === 'learning candidate cache is not ignored: .wren/cache/.gitignore has unexpected content'
+      )
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('runDoctor warns about invalid learning candidates', async () => {
+  const root = await tempDir();
+  try {
+    await initWren(root, packageRoot);
+    await mkdir(path.join(root, 'recap'));
+    await buildAndWriteSearchIndex(root, await loadConfig(root));
+    await writeLearningCandidate(root, 'unsafe-target', `---
+id: unsafe-target
+status: candidate
+scope: vault
+domain: reflect-routing
+confidence: 0.7
+created: 2026-06-25
+trigger: when reflecting
+evidence:
+  - recap/example.md
+suggested_targets:
+  - atlas/index.md
+---
+
+# Unsafe Target
+`);
+
+    const report = await runDoctor(root);
+
+    assert.equal(report.errors, 0);
+    assert.equal(report.warnings, 1);
+    assert.ok(
+      report.checks.some((check) =>
+        check.message === 'learning candidate invalid: .wren/cache/learning/candidates/unsafe-target.md (suggested target is not a Wren instruction surface: atlas/index.md)'
+      )
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -177,6 +293,31 @@ async function writeConfig(root: string, value: unknown): Promise<void> {
   const configPath = path.join(root, '.wren', 'config.json');
   await mkdir(path.dirname(configPath), { recursive: true });
   await writeFile(configPath, JSON.stringify(value), 'utf8');
+}
+
+async function writeLearningCandidate(root: string, id: string, content: string): Promise<void> {
+  const candidatePath = path.join(root, LEARNING_CANDIDATES_DIR, `${id}.md`);
+  await mkdir(path.dirname(candidatePath), { recursive: true });
+  await writeFile(candidatePath, content, 'utf8');
+}
+
+function validLearningCandidate(id: string): string {
+  return `---
+id: ${id}
+status: candidate
+scope: vault
+domain: reflect-routing
+confidence: 0.72
+created: 2026-06-25
+trigger: when reflect evidence maps to multiple atlas sections
+evidence:
+  - .wren/cache/metrics.jsonl
+suggested_targets:
+  - .wren/workflows/reflect.md
+---
+
+# Ask Before Cross Section Reflect
+`;
 }
 
 async function tempDir(): Promise<string> {

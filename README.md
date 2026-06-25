@@ -67,9 +67,11 @@ Agent workflows guide reasoning, retrieval, synthesis, or writing. Use them thro
 - `/wren recall`: read the atlas index first, then relevant atlas pages and source evidence as needed; log path/query-only metrics locally.
 - `/wren reflect`: update source-linked atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; log path-only metrics and refresh BM25 when enabled.
 
-### User-facing CLI helpers
+Recap and reflect workflows may also save at most one inert learning candidate under `.wren/cache/learning/candidates/` when they notice a reusable Wren workflow improvement. These candidates are not note content, are not active rules, and are never promoted automatically.
 
-CLI helpers are deterministic and scriptable. Agents may use them, and you can run them directly from a vault:
+### User-facing deterministic helpers
+
+Deterministic helpers are scriptable CLI commands. With the Pi adapter installed, the same helpers are also available through `/wren ...` as an in-agent convenience.
 
 ```bash
 wren init
@@ -77,17 +79,32 @@ wren doctor
 wren index
 wren search "query" --area all --limit 10
 wren lint
+wren learn list
+wren learn show <id>
+wren learn drop <id>
+```
+
+```text
+/wren init
+/wren doctor
+/wren index
+/wren search "query" --area all --limit 10
+/wren lint
+/wren learn list
+/wren learn show <id>
+/wren learn drop <id>
 ```
 
 - `wren init`: create Wren scaffold files without overwriting existing files.
-- `wren doctor`: report setup, source, and search-index issues.
+- `wren doctor`: report setup, source, search-index, and learning-candidate issues.
 - `wren index`: build `.wren/cache/search-index.json`.
 - `wren search`: return ranked, line-numbered snippets.
 - `wren lint`: report structure/link/source issues.
+- `wren learn list/show/drop`: review or remove inert learning candidates. MVP learning candidates have no authority and no automatic promotion.
 
 ### Workflow support commands
 
-Workflow support commands are low-level primitives used by Wren workflows and adapters. They are not user-facing helpers.
+Workflow support commands are low-level primitives used by Wren workflows and adapters. They are not user-facing helpers and are not exposed as `/wren ...` conveniences.
 
 Examples include `wren write-recap` and `wren metric`.
 
@@ -107,9 +124,10 @@ atlas/                    -> source-linked synthesis
 - `/wren recall` may append path/query-only metrics to `.wren/cache/metrics.jsonl`.
 - `/wren reflect` writes only configured atlas files and derived `.wren/cache/` files.
 - `wren lint` checks vault content and Wren protocol health.
-- `wren doctor` checks setup, config, runtime, and search-index health.
+- `wren doctor` checks setup, config, runtime, search-index health, and pending/invalid learning candidates.
 - Wren edits `.wren/config.json`, workflows, or templates only when explicitly requested.
 - Wren does not automatically synthesize notes; invoke `/wren reflect` when source notes should enter the atlas.
+- Learning candidates under `.wren/cache/learning/candidates/` are derived workflow metadata only. Normal workflows do not read them as instructions; review them explicitly with `wren learn`.
 
 ## Safety and Write Policy
 

@@ -91,6 +91,50 @@ test('/wren search preserves multi-word query and options', () => {
   assert.equal(plan.displayCommand, "wren search 'memory identity' --area sources --limit 5");
 });
 
+test('/wren learn defaults to list', () => {
+  const plan = planWrenCommand('learn');
+
+  assert.equal(plan.kind, 'cli');
+  assert.equal(plan.command, 'learn');
+  assert.deepEqual(plan.cliArgs, ['learn', 'list']);
+  assert.equal(plan.displayCommand, 'wren learn list');
+});
+
+test('/wren learn list builds a CLI plan', () => {
+  const plan = planWrenCommand('learn list');
+
+  assert.equal(plan.kind, 'cli');
+  assert.equal(plan.command, 'learn');
+  assert.deepEqual(plan.cliArgs, ['learn', 'list']);
+  assert.equal(plan.displayCommand, 'wren learn list');
+});
+
+test('/wren learn show and drop preserve candidate ids', () => {
+  const show = planWrenCommand('learn show ask-before-cross-section-reflect');
+  const drop = planWrenCommand('learn drop "Bad Candidate"');
+
+  assert.equal(show.kind, 'cli');
+  assert.deepEqual(show.cliArgs, ['learn', 'show', 'ask-before-cross-section-reflect']);
+  assert.equal(show.displayCommand, 'wren learn show ask-before-cross-section-reflect');
+
+  assert.equal(drop.kind, 'cli');
+  assert.deepEqual(drop.cliArgs, ['learn', 'drop', 'Bad Candidate']);
+  assert.equal(drop.displayCommand, "wren learn drop 'Bad Candidate'");
+});
+
+test('/wren learn validates subcommand usage', () => {
+  const unknown = planWrenCommand('learn promote candidate');
+  const missingId = planWrenCommand('learn show');
+  const extraListArg = planWrenCommand('learn list extra');
+
+  assert.equal(unknown.kind, 'error');
+  assert.match(unknown.message, /Usage: \/wren learn list\|show\|drop/);
+  assert.equal(missingId.kind, 'error');
+  assert.match(missingId.message, /Usage: \/wren learn show <id>/);
+  assert.equal(extraListArg.kind, 'error');
+  assert.match(extraListArg.message, /Usage: \/wren learn list/);
+});
+
 test('/wren search requires a query', () => {
   const plan = planWrenCommand('search');
 
