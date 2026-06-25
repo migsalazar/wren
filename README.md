@@ -1,10 +1,12 @@
 # Wren
 
-Wren is a Markdown-first protocol for maintaining traceable reflections across a local collection of Markdown files, designed with Obsidian vaults in mind.
+Wren is a Markdown-first protocol for maintaining traceable notes across a local collection of Markdown files, designed with Obsidian vaults in mind.
 
-It helps agents work with an Obsidian vault. Wren adds local workflows and CLI helpers for: capturing conversations, recalling relevant context, and maintaining source-linked synthesis.
+It helps agents work with an Obsidian vault. Wren adds local workflows and deterministic helpers for capturing conversations, recalling relevant context, validating workspace health, and maintaining source-linked synthesis.
 
-## Install Wren
+## Quick Start
+
+Clone and install:
 
 ```bash
 git clone https://github.com/migsalazar/wren.git
@@ -14,25 +16,22 @@ npm run build
 npm link             # install the wren CLI
 ```
 
-### Using with Pi
-
-Right now, Pi is the only adapter; adapters are ergonomic conveniences.
+Right now, Pi is the only adapter; adapters are ergonomic conveniences. The adapter sends workflow commands to the agent and runs deterministic CLI helpers directly:
 
 ```bash
-pi install "$(pwd)"  # install the Pi /wren adapter
+pi install "$(pwd)"  # install the Pi /wren adapter from the Wren checkout
 ```
 
-### Using with other agents
+*With other agents*: Agents that read `AGENTS.md` can follow `/wren recap`, `/wren recall`, and `/wren reflect` as workflows.
 
-Agents that read `AGENTS.md` can use `/wren recap`, `/wren recall`, and `/wren reflect` as workflows, and can run `wren lint` as a deterministic helper.
-
-## Initialize local workflow
+## Initialize a Vault
 
 From an Obsidian vault or Markdown workspace:
 
 ```bash
 cd /path/to/vault
 wren init
+wren doctor
 ```
 
 `wren init` creates local Wren files without overwriting existing files:
@@ -46,11 +45,79 @@ atlas/index.md
 atlas/log.md
 ```
 
-`atlas/` is Wren's source-linked synthesis workspace. Source folders can route reflection output into configured atlas sections under `areas.atlas.path`, such as `atlas/<section>/`.
+Review `.wren/config.json` after initialization. Wren auto-detects top-level Markdown source folders, includes the recap path, skips atlas/hidden/system folders, and enables BM25 search.
 
-Review `.wren/config.json`. Wren auto-detects top-level Markdown source folders, includes the recap path, skips atlas/hidden/system folders, and enables BM25 search.
+## Command Model
 
-Example config:
+Wren has three command categories.
+
+_Use `/wren help` in Pi to see available Wren commands._
+
+### Agent workflows
+
+Agent workflows guide reasoning, retrieval, synthesis, or writing. Use them through an agent:
+
+```text
+/wren recap [instructions]
+/wren recall [query]
+/wren reflect [scope]
+```
+
+- `/wren recap`: summarize the current agent conversation into a source-level recap note; store it with deterministic recap-writing mechanics and refresh BM25 when enabled.
+- `/wren recall`: read the atlas index first, then relevant atlas pages and source evidence as needed; log path/query-only metrics locally.
+- `/wren reflect`: update source-linked atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; log path-only metrics and refresh BM25 when enabled.
+
+### User-facing CLI helpers
+
+CLI helpers are deterministic and scriptable. Agents may use them, and you can run them directly from a vault:
+
+```bash
+wren init
+wren doctor
+wren index
+wren search "query" --area all --limit 10
+wren lint
+```
+
+- `wren init`: create Wren scaffold files without overwriting existing files.
+- `wren doctor`: report setup, source, and search-index issues.
+- `wren index`: build `.wren/cache/search-index.json`.
+- `wren search`: return ranked, line-numbered snippets.
+- `wren lint`: report structure/link/source issues.
+
+### Workflow support commands
+
+Workflow support commands are low-level primitives used by Wren workflows and adapters. They are not user-facing helpers.
+
+Examples include `wren write-recap` and `wren metric`.
+
+## Core Model
+
+```text
+configured source folders -> source evidence
+atlas/                    -> source-linked synthesis
+.wren/                    -> protocol, config, templates, cache
+```
+
+- Recap notes are ordinary source notes when the recap path is listed in `sources`.
+- `sources[].atlasSection` maps a source folder to a section under `areas.atlas.path`.
+- Multiple source folders can map to the same atlas section.
+- Recall and reflect read configured `sources`, plus files or folders the user explicitly provides.
+- `/wren recap` writes only recap notes and derived `.wren/cache/` files.
+- `/wren recall` may append path/query-only metrics to `.wren/cache/metrics.jsonl`.
+- `/wren reflect` writes only configured atlas files and derived `.wren/cache/` files.
+- `wren lint` checks vault content and Wren protocol health.
+- `wren doctor` checks setup, config, runtime, and search-index health.
+- Wren edits `.wren/config.json`, workflows, or templates only when explicitly requested.
+- Wren does not automatically synthesize notes; invoke `/wren reflect` when source notes should enter the atlas.
+
+## Safety and Write Policy
+
+Agent workflow writes happen directly in git-backed vaults. In non-git vaults, Wren asks before writing. Direct CLI commands execute as requested. Wren also asks before destructive, unusual, or out-of-boundary changes. Wren does not create or switch git branches.
+
+## Configuration
+
+Example `.wren/config.json`:
 
 ```json
 {
@@ -71,68 +138,7 @@ Example config:
 }
 ```
 
-## Agent Commands
-
-From the vault, start your agent and use:
-
-```text
-/wren help
-```
-
-Agent workflows guide reasoning, retrieval, and synthesis:
-
-```text
-/wren recap [instructions]
-/wren recall [query]
-/wren reflect [scope]
-```
-
-Deterministic helpers run bounded checks or actions:
-
-```text
-/wren lint
-```
-
-With the Pi adapter installed, these CLI helpers are also available through `/wren`:
-
-```text
-/wren init
-/wren doctor
-/wren index
-/wren search <query>
-```
-
-Workflow summary:
-
-- `/wren recap`: summarize the current agent conversation into a source-level recap note; store it with deterministic recap-writing mechanics and refresh BM25 when enabled.
-- `/wren recall`: read the atlas index first, then relevant atlas pages and source evidence as needed; log path/query-only metrics locally.
-- `/wren reflect`: update source-linked atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; log path-only metrics and refresh BM25 when enabled.
-
-Helper summary:
-
-- `/wren lint`: run deterministic Wren content/protocol health checks without silent rewrites.
-- `/wren doctor`: run deterministic setup, config, runtime, and search-index diagnostics.
-
-Agent workflow writes happen directly in git-backed vaults. In non-git vaults, Wren asks before writing. Direct CLI commands execute as requested. Wren also asks before destructive, unusual, or out-of-boundary changes. Wren does not create or switch git branches.
-
-## Core Model
-
-```text
-configured source folders -> source evidence
-atlas/                    -> source-linked synthesis
-.wren/                    -> protocol, config, templates, cache
-```
-
-- Recap notes are ordinary source notes when the recap path is listed in `sources`.
-- `sources[].atlasSection` maps a source folder to a section under `areas.atlas.path`.
-- Multiple source folders can map to the same atlas section.
-- Recall and reflect read configured `sources`, plus files or folders the user explicitly provides.
-- `/wren recap` writes only recap notes and derived `.wren/cache/` files.
-- `/wren recall` may append path/query-only metrics to `.wren/cache/metrics.jsonl`.
-- `/wren reflect` writes only configured atlas files and derived `.wren/cache/` files.
-- Wren edits `.wren/config.json`, workflows, or templates only when explicitly requested.
-- `wren lint` checks vault content and Wren protocol health; `wren doctor` checks setup, config, runtime, and search-index health.
-- Wren does not automatically synthesize notes; invoke `/wren reflect` when source notes should enter the atlas.
+`atlas/` is Wren's source-linked synthesis workspace. Source folders can route reflection output into configured atlas sections under `areas.atlas.path`, such as `atlas/<section>/`.
 
 ## Atlas Index, Log, and Sections
 
@@ -150,23 +156,6 @@ Reflect routing uses these rules:
 6. If no mapping applies, use `areas.atlas.defaultSection`.
 
 These are productive files, not instruction templates. Reflect keeps them concise and updates them with meaningful atlas changes.
-
-## CLI Helpers
-
-```bash
-wren init
-wren index
-wren search "query" --area all --limit 10
-wren doctor
-wren lint
-```
-
-- `wren index` builds `.wren/cache/search-index.json`.
-- `wren search` returns ranked, line-numbered snippets.
-- `wren doctor` reports setup, source, and search-index issues.
-- `wren lint` reports structure/link/source issues.
-
-Workflow support commands such as `wren metric` are used by Wren workflows and adapters, but are not normal user-facing helpers.
 
 ## Development
 
