@@ -10,7 +10,7 @@ When the user invokes a Wren workflow, read and follow the matching local workfl
 - `/wren recall` -> `.wren/workflows/recall.md`
 - `/wren reflect` -> `.wren/workflows/reflect.md`
 
-`/wren lint` is a deterministic helper command, not a workflow. Run `wren lint` and report its findings.
+Deterministic helpers such as `wren lint`, `wren doctor`, `wren index`, `wren search`, and `wren learn list|show|drop` are not workflows. With the Pi adapter, users may invoke the same helpers as `/wren lint`, `/wren doctor`, `/wren index`, `/wren search`, and `/wren learn list|show|drop`. Run the requested helper and report its findings.
 
 ### Routing Rules
 
@@ -37,6 +37,21 @@ When the user invokes a Wren workflow, read and follow the matching local workfl
 - `/wren recall`: read the configured atlas root's `index.md`, relevant atlas pages, then source evidence as needed; append local metrics when available.
 - `/wren reflect`: update cited atlas synthesis under the selected atlas section plus the configured atlas root's `index.md` and `log.md`; append local metrics and refresh BM25 when enabled.
 
+## Learning Candidates
+
+- Wren learning candidates are inert workflow-improvement suggestions stored only under `.wren/cache/learning/candidates/`.
+- They have no authority and must not be read or applied during normal `/wren recap`, `/wren recall`, or `/wren reflect` runs.
+- Never add learning-candidate content to recap notes, source notes, atlas pages, or the configured atlas root's `index.md` or `log.md`.
+- Passive candidate capture may write at most one high-signal candidate after `/wren recap` or `/wren reflect`, and only to `.wren/cache/learning/candidates/<id>.md`.
+- Do not promote candidates or modify `.wren/workflows/`, `.wren/templates/`, `AGENTS.md`, or `.wren/learning/` unless the user explicitly asks to review/promote learning.
+- Use `wren learn list`, `wren learn show <id>`, and `wren learn drop <id>` to review or remove candidates. `wren doctor` reports pending or invalid candidates.
+
 ## Deterministic Helpers
 
-- `/wren lint`: run `wren lint` to report content health issues without silent rewrites.
+Use the `wren ...` CLI form directly, or the equivalent `/wren ...` form when the Pi adapter is installed:
+
+- `wren lint` / `/wren lint`: report content health issues without silent rewrites.
+- `wren doctor` / `/wren doctor`: report setup, config, search-index, and learning-candidate health.
+- `wren index` / `/wren index`: build the local BM25 search index.
+- `wren search` / `/wren search`: search the local BM25 index.
+- `wren learn list|show|drop` / `/wren learn list|show|drop`: review or remove inert learning candidates without applying them.

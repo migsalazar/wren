@@ -1,7 +1,9 @@
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
+import { WREN_CACHE_GITIGNORE_CONTENT, WREN_CACHE_GITIGNORE_PATH } from './cache.js';
 import { CONFIG_PATH, WrenConfig, loadConfig } from './config.js';
-import { pathExists } from './files.js';
+import { pathExists, readText } from './files.js';
+import { LEARNING_CANDIDATES_DIR, listLearningCandidates } from './learning.js';
 import { getSearchIndexStatus } from './search.js';
 import { discoverTopLevelSourceFolders } from './sources.js';
 
@@ -53,6 +55,7 @@ export async function runDoctor(rootDir: string): Promise<DoctorReport> {
   await checkSourceFolders(checks, rootDir, config);
   await checkUnconfiguredSourceFolders(checks, rootDir, config);
   await checkSearchIndex(checks, rootDir, config);
+  await checkLearningCandidates(checks, rootDir);
   await checkPath(checks, rootDir, 'AGENTS.md', 'agent instructions', 'warn');
 
   return summarize(checks);
@@ -134,6 +137,40 @@ async function checkSearchIndex(checks: DoctorCheck[], rootDir: string, config: 
   }
 
   checks.push(ok(`search index fresh: ${status.documentCount} files`));
+}
+
+async function checkLearningCandidates(checks: DoctorCheck[], rootDir: string): Promise<void> {
+  const records = await listLearningCandidates(rootDir);
+  if (records.length === 0) {
+    checks.push(ok(`learning candidates: none (${LEARNING_CANDIDATES_DIR})`));
+    return;
+  }
+
+  await checkLearningCacheGitignore(checks, rootDir);
+
+  const invalid = records.filter((record) => record.issues.length > 0);
+  const valid = records.length - invalid.length;
+
+  if (valid > 0) {
+    checks.push(ok(`learning candidates pending: ${valid} (review with: wren learn list)`));
+  }
+
+  for (const record of invalid) {
+    checks.push(warn(`learning candidate invalid: ${record.relativePath} (${record.issues.join('; ')})`));
+  }
+}
+
+async function checkLearningCacheGitignore(checks: DoctorCheck[], rootDir: string): Promise<void> {
+  const gitignorePath = path.join(rootDir, WREN_CACHE_GITIGNORE_PATH);
+  if (!(await pathExists(gitignorePath))) {
+    checks.push(warn(`learning candidate cache is not ignored: ${WREN_CACHE_GITIGNORE_PATH} missing`));
+    return;
+  }
+
+  const content = await readText(gitignorePath);
+  if (content !== WREN_CACHE_GITIGNORE_CONTENT) {
+    checks.push(warn(`learning candidate cache is not ignored: ${WREN_CACHE_GITIGNORE_PATH} has unexpected content`));
+  }
 }
 
 async function checkPath(

@@ -19,6 +19,10 @@ Turn configured source notes into source-linked atlas synthesis.
 - Ask before destructive or unusual changes: deleting pages, renaming pages, rewriting large unrelated sections, or writing outside the configured atlas root.
 - Do not report "no changes" without listing searched/read evidence and why no update is warranted.
 - If `useBm25` is true and atlas files changed, ensure the search index is refreshed; report if it may be stale.
+- Learning candidates are derived workflow metadata, never atlas content. Do not add learning sections, candidate notes, or reusable-rule commentary to atlas pages, `index.md`, or `log.md`.
+- After reflection writes and normal reporting are complete, you may write at most one high-signal inert learning candidate to `.wren/cache/learning/candidates/<id>.md` when the run reveals a reusable Wren workflow improvement. Before writing a candidate, ensure `.wren/cache/.gitignore` exists with exactly `*\n!.gitignore\n` so candidates remain derived cache files.
+- Passive candidate capture must never modify source notes, recap notes, atlas pages, `.wren/workflows/`, `.wren/templates/`, `AGENTS.md`, or other instruction surfaces.
+- A candidate must include frontmatter with `id`, `status: candidate`, `scope: vault`, `domain`, `confidence`, `created`, `trigger`, non-empty `evidence`, and non-empty `suggested_targets` limited to `.wren/workflows/*.md`, `.wren/templates/*.md`, `AGENTS.md`, or `.wren/learning/*.md`.
 
 ## Atlas Section Routing
 
@@ -68,6 +72,7 @@ Keep the configured atlas root's `index.md` as a concise global content catalog.
 8. Write atlas, index, and log changes.
 9. Log the reflection with `wren metric --event reflect`; repeat `--write <path>` for each atlas page created/updated, and include paths only, not content.
 10. Ensure BM25 is refreshed when enabled and atlas files changed.
+11. Optionally save one inert cache-only learning candidate if the run exposed a reusable Wren workflow improvement and the candidate has concrete evidence plus a suggested target; ensure `.wren/cache/.gitignore` exists first.
 
 ## Output
 

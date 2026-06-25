@@ -1,5 +1,5 @@
 export type WrenWorkflowCommand = 'recap' | 'recall' | 'reflect';
-export type WrenCliCommand = 'init' | 'doctor' | 'index' | 'search' | 'lint';
+export type WrenCliCommand = 'init' | 'doctor' | 'index' | 'search' | 'lint' | 'learn';
 
 export interface WrenHelpPlan {
   kind: 'help';
@@ -38,7 +38,7 @@ const WORKFLOW_PATHS: Record<WrenWorkflowCommand, string> = {
 };
 
 const WORKFLOW_COMMANDS = new Set<string>(Object.keys(WORKFLOW_PATHS));
-const CLI_COMMANDS = new Set<string>(['init', 'doctor', 'index', 'search', 'lint']);
+const CLI_COMMANDS = new Set<string>(['init', 'doctor', 'index', 'search', 'lint', 'learn']);
 
 export function planWrenCommand(args: string): WrenCommandPlan {
   const parsed = parseInvocation(args);
@@ -79,6 +79,9 @@ Usage:
   /wren doctor
   /wren index
   /wren search <query> [--area atlas|sources|all] [--limit N]
+  /wren learn list
+  /wren learn show <id>
+  /wren learn drop <id>
   /wren init
 
 Agent workflows:
@@ -91,6 +94,7 @@ Deterministic helper commands:
   doctor    Run setup diagnostics.
   index     Build the local BM25 search index.
   search    Search the local BM25 index.
+  learn     Review or remove inert learning candidates.
   init      Create the Wren scaffold after confirmation.
 
 Wren layers:
@@ -135,6 +139,10 @@ function buildCliPlan(command: WrenCliCommand, argsText: string): WrenCommandPla
     return { kind: 'error', message: 'Usage: /wren search <query> [--area atlas|sources|all] [--limit N]' };
   }
 
+  if (command === 'learn') {
+    return buildLearnCliPlan(args);
+  }
+
   if (command !== 'search' && args.length > 0) {
     return { kind: 'error', message: `Usage: /wren ${command}` };
   }
@@ -160,6 +168,34 @@ function buildCliPlan(command: WrenCliCommand, argsText: string): WrenCommandPla
     cliArgs,
     displayCommand: formatDisplayCommand(cliArgs)
   };
+}
+
+function buildLearnCliPlan(args: string[]): WrenCommandPlan {
+  const [subcommand = 'list', ...rest] = args;
+
+  if (subcommand === 'list') {
+    if (rest.length > 0) return { kind: 'error', message: 'Usage: /wren learn list' };
+    const cliArgs = ['learn', 'list'];
+    return {
+      kind: 'cli',
+      command: 'learn',
+      cliArgs,
+      displayCommand: formatDisplayCommand(cliArgs)
+    };
+  }
+
+  if (subcommand === 'show' || subcommand === 'drop') {
+    if (rest.length !== 1) return { kind: 'error', message: `Usage: /wren learn ${subcommand} <id>` };
+    const cliArgs = ['learn', subcommand, rest[0]];
+    return {
+      kind: 'cli',
+      command: 'learn',
+      cliArgs,
+      displayCommand: formatDisplayCommand(cliArgs)
+    };
+  }
+
+  return { kind: 'error', message: 'Usage: /wren learn list|show|drop' };
 }
 
 function parseInvocation(args: string): { subcommand: string | undefined; rest: string } {

@@ -6,6 +6,7 @@ import { loadConfig } from './config.js';
 import { formatDoctorReport, runDoctor } from './doctor.js';
 import { formatInitResult, initWren } from './init.js';
 import { formatLintReport, runLint } from './lint.js';
+import { dropLearningCandidate, formatLearningCandidateList, formatLearningCandidateShow, listLearningCandidates, readLearningCandidate } from './learning.js';
 import { appendMetric, resolveMetricInput } from './metric.js';
 import { buildAndWriteSearchIndex, formatIndexReport, formatSearchReport, runSearch, SearchArea } from './search.js';
 
@@ -97,7 +98,39 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (command === 'learn') {
+    await runLearnCommand(args);
+    return;
+  }
+
   throw new Error(`Unknown command: ${command}`);
+}
+
+async function runLearnCommand(args: string[]): Promise<void> {
+  const [subcommand, ...subArgs] = args;
+
+  if (!subcommand || subcommand === 'list') {
+    rejectUnsupportedOptions(subArgs, new Set(), 'learn list');
+    const unexpected = readPositionals(subArgs, new Set())[0];
+    if (unexpected) throw new Error(`Unexpected learn list argument: ${unexpected}.`);
+    console.log(formatLearningCandidateList(await listLearningCandidates(rootDir)));
+    return;
+  }
+
+  if (subcommand === 'show') {
+    if (subArgs.length !== 1) throw new Error('Usage: wren learn show <id>');
+    console.log(formatLearningCandidateShow(await readLearningCandidate(rootDir, subArgs[0])));
+    return;
+  }
+
+  if (subcommand === 'drop') {
+    if (subArgs.length !== 1) throw new Error('Usage: wren learn drop <id>');
+    const droppedPath = await dropLearningCandidate(rootDir, subArgs[0]);
+    console.log(`Dropped learning candidate: ${droppedPath}`);
+    return;
+  }
+
+  throw new Error(`Unknown learn command: ${subcommand}`);
 }
 
 function readOption(args: string[], name: string): string | undefined {
@@ -178,6 +211,9 @@ Commands:
   index                      Build the local BM25 search index
   search <query>             Search the local BM25 index
   lint                       Check Wren content health
+  learn list                 List inert learning candidates
+  learn show <id>            Show a learning candidate
+  learn drop <id>            Drop a learning candidate
 
 Workflow support commands:
   write-recap                Store already-authored recap content from stdin
@@ -196,6 +232,9 @@ Options:
   metric --read        Optional file read path, repeatable
   metric --write       Optional file written path, repeatable
   metric --area        atlas, sources, or all
+
+Learning candidates are cache-only suggestions under .wren/cache/learning/candidates/.
+They have no authority until explicitly reviewed outside this MVP.
 `);
 }
 
