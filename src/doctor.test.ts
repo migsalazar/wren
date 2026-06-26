@@ -280,13 +280,29 @@ test('formatDoctorReport renders status symbols and summary', () => {
       { status: 'warn', message: 'recap directory missing: recap' },
       { status: 'error', message: 'atlas missing: atlas' }
     ]
-  });
+  }, { color: false });
 
   assert.match(output, /^Wren doctor/);
   assert.match(output, /✓ config valid/);
   assert.match(output, /! recap directory missing: recap/);
   assert.match(output, /✗ atlas missing: atlas/);
   assert.match(output, /Result: 1 warning, 1 error/);
+});
+
+test('formatDoctorReport colors warnings yellow and errors red', () => {
+  const output = formatDoctorReport({
+    errors: 1,
+    warnings: 1,
+    checks: [
+      { status: 'ok', message: 'config valid' },
+      { status: 'warn', message: 'recap directory missing: recap' },
+      { status: 'error', message: 'atlas missing: atlas' }
+    ]
+  }, { color: true });
+
+  assert.match(output, /✓ config valid/);
+  assert.match(output, /\u001b\[33m! recap directory missing: recap\u001b\[0m/);
+  assert.match(output, /\u001b\[31m✗ atlas missing: atlas\u001b\[0m/);
 });
 
 async function writeConfig(root: string, value: unknown): Promise<void> {
