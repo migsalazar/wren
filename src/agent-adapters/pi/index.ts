@@ -46,7 +46,7 @@ interface PiExecResult {
 
 export default function registerWrenPiAdapter(pi: PiApi): void {
   pi.registerCommand('wren', {
-    description: 'Use Wren workflows and CLI helpers',
+    description: 'Use Wren workflows and deterministic CLI helper aliases',
     handler: async (args, ctx) => {
       const plan = planWrenCommand(args);
       await executeWrenPlan(pi, ctx, plan);

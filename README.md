@@ -16,7 +16,7 @@ npm run build
 npm link             # install the wren CLI
 ```
 
-Right now, Pi is the only adapter; adapters are ergonomic conveniences. The adapter sends workflow commands to the agent and runs deterministic CLI helpers directly:
+Right now, Pi is the only adapter; adapters are ergonomic conveniences. The `/wren ...` adapter namespace sends workflow requests to the agent and runs deterministic CLI helper aliases directly:
 
 ```bash
 pi install "$(pwd)"  # install the Pi /wren adapter from the Wren checkout
@@ -49,9 +49,9 @@ Review `.wren/config.json` after initialization. Wren auto-detects top-level Mar
 
 ## Command Model
 
-Wren has three command categories.
+Wren has three command categories. The `wren ...` CLI is the full command surface; the `/wren ...` agent adapter namespace exposes agent workflows and selected deterministic helper aliases.
 
-_Use `/wren help` in Pi to see available Wren commands._
+_Use `/wren help` in Pi to see available adapter commands._
 
 ### Agent workflows
 
@@ -71,7 +71,7 @@ Recap and reflect workflows may also save at most one inert learning candidate u
 
 ### User-facing deterministic helpers
 
-Deterministic helpers are scriptable CLI commands. With the Pi adapter installed, the same helpers are also available through `/wren ...` as an in-agent convenience.
+Deterministic helpers are scriptable CLI commands. With the agent adapter installed, selected user-facing helpers are also available through `/wren ...` as adapter aliases. These aliases run the same deterministic CLI behavior; they are not workflows.
 
 ```bash
 wren init
