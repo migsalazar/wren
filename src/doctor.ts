@@ -127,12 +127,12 @@ async function checkSearchIndex(checks: DoctorCheck[], rootDir: string, config: 
   checks.push(ok('BM25 recall enabled'));
 
   if (status.status === 'missing') {
-    checks.push(warn(`search index missing: ${status.path}`));
+    checks.push(warn(`search index missing: ${status.path} (run: wren index)`));
     return;
   }
 
   if (status.status === 'stale') {
-    checks.push(warn(`search index stale: ${status.reason}`));
+    checks.push(warn(`search index stale: ${status.reason} (run: wren index)`));
     return;
   }
 
