@@ -14,7 +14,11 @@ test('/wren help shows help', () => {
   const plan = planWrenCommand('help');
 
   assert.equal(plan.kind, 'help');
-  assert.match(plan.message, /Wren agent command/);
+  assert.match(plan.message, /Wren agent adapter commands/);
+  assert.match(plan.message, /Agent workflows:/);
+  assert.match(plan.message, /Deterministic helper aliases:/);
+  assert.match(plan.message, /\/wren \.\.\. = agent adapter slash namespace/);
+  assert.match(plan.message, /wren \.\.\.  = CLI command surface/);
 });
 
 test('/wren unknown command returns a useful error', () => {
@@ -23,6 +27,16 @@ test('/wren unknown command returns a useful error', () => {
   assert.equal(plan.kind, 'error');
   assert.match(plan.message, /Unknown Wren command: remember/);
   assert.match(plan.message, /\/wren help/);
+});
+
+test('/wren does not expose workflow support CLI primitives as aliases', () => {
+  const writeRecap = planWrenCommand('write-recap');
+  const metric = planWrenCommand('metric');
+
+  assert.equal(writeRecap.kind, 'error');
+  assert.match(writeRecap.message, /Unknown Wren command: write-recap/);
+  assert.equal(metric.kind, 'error');
+  assert.match(metric.message, /Unknown Wren command: metric/);
 });
 
 test('/wren recall builds a recall workflow prompt', () => {

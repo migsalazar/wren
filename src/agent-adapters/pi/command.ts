@@ -68,7 +68,7 @@ export function planWrenCommand(args: string): WrenCommandPlan {
 }
 
 export function formatWrenHelp(): string {
-  return `Wren agent command
+  return `Wren agent adapter commands
 
 Usage:
   /wren help
@@ -89,7 +89,7 @@ Agent workflows:
   recall    Follow .wren/workflows/recall.md and recover relevant context.
   reflect   Follow .wren/workflows/reflect.md and update atlas synthesis.
 
-Deterministic helper commands:
+Deterministic helper aliases:
   lint      Check Wren content health.
   doctor    Run setup diagnostics.
   index     Build the local BM25 search index.
@@ -98,9 +98,9 @@ Deterministic helper commands:
   init      Create the Wren scaffold after confirmation.
 
 Wren layers:
-  /wren ... = canonical in-agent entrypoint when this adapter is installed
-  wren ...  = deterministic CLI helper
-  .wren/workflows/*.md = local workflow protocol source of truth`;
+  /wren ... = agent adapter slash namespace when this adapter is installed
+  wren ...  = CLI command surface
+  .wren/workflows/*.md = local workflow protocol files for recap, recall, and reflect`;
 }
 
 function buildWorkflowPrompt(command: WrenWorkflowCommand, argsText: string): string {
