@@ -7,6 +7,17 @@ import { loadConfig } from './config.js';
 import { formatInitResult, initWren } from './init.js';
 
 const packageRoot = process.cwd();
+const SCAFFOLD_FILES = [
+  '.wren/config.json',
+  '.wren/workflows/recap.md',
+  '.wren/workflows/recall.md',
+  '.wren/workflows/reflect.md',
+  '.wren/templates/recap.md',
+  '.wren/templates/atlas.md',
+  'AGENTS.md',
+  'atlas/index.md',
+  'atlas/log.md'
+];
 
 test('initWren creates scaffold files without creating recap folder', async () => {
   const root = await tempDir();
@@ -14,17 +25,7 @@ test('initWren creates scaffold files without creating recap folder', async () =
     const result = await initWren(root, packageRoot);
 
     assert.deepEqual(result.skipped, []);
-    assert.deepEqual(result.created.sort(), [
-      '.wren/config.json',
-      '.wren/workflows/recap.md',
-      '.wren/workflows/recall.md',
-      '.wren/workflows/reflect.md',
-      '.wren/templates/recap.md',
-      '.wren/templates/atlas.md',
-      'AGENTS.md',
-      'atlas/index.md',
-      'atlas/log.md'
-    ].sort());
+    assert.deepEqual(result.created.sort(), [...SCAFFOLD_FILES].sort());
 
     const config = JSON.parse(await readFile(path.join(root, '.wren/config.json'), 'utf8')) as {
       areas: { atlas: { path: string; defaultSection: string } };
@@ -38,6 +39,34 @@ test('initWren creates scaffold files without creating recap folder', async () =
     assert.deepEqual(config.sources, [{ path: 'recap', atlasSection: 'general' }]);
     assert.equal(config.useBm25, true);
     await assert.rejects(readFile(path.join(root, 'recap'), 'utf8'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('initWren preserves preexisting scaffold files while creating missing scaffold files', async () => {
+  const root = await tempDir();
+  try {
+    const preexistingFiles = ['AGENTS.md', '.wren/workflows/recap.md', 'atlas/index.md'];
+    const sentinels = new Map<string, string>();
+
+    for (const [index, scaffoldFile] of preexistingFiles.entries()) {
+      const sentinel = `preexisting scaffold content ${index}: ${scaffoldFile}`;
+      sentinels.set(scaffoldFile, sentinel);
+      await mkdir(path.dirname(path.join(root, scaffoldFile)), { recursive: true });
+      await writeFile(path.join(root, scaffoldFile), sentinel, 'utf8');
+    }
+
+    const result = await initWren(root, packageRoot);
+    const expectedCreated = SCAFFOLD_FILES.filter((scaffoldFile) => !preexistingFiles.includes(scaffoldFile));
+
+    assert.deepEqual(result.created.sort(), expectedCreated.sort());
+    assert.deepEqual(result.skipped.sort(), [...preexistingFiles].sort());
+    assert.deepEqual(result.configuredSources, ['recap']);
+
+    for (const [scaffoldFile, sentinel] of sentinels) {
+      assert.equal(await readFile(path.join(root, scaffoldFile), 'utf8'), sentinel);
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -96,16 +125,27 @@ test('initWren avoids reserved atlas section names for discovered source folders
   }
 });
 
-test('initWren skips existing files without overwriting them', async () => {
+test('initWren skips existing scaffold files without overwriting them', async () => {
   const root = await tempDir();
   try {
     await initWren(root, packageRoot);
-    await writeFile(path.join(root, 'AGENTS.md'), 'custom instructions', 'utf8');
+    const sentinels = new Map<string, string>();
+
+    for (const [index, scaffoldFile] of SCAFFOLD_FILES.entries()) {
+      const sentinel = `custom scaffold content ${index}: ${scaffoldFile}`;
+      sentinels.set(scaffoldFile, sentinel);
+      await writeFile(path.join(root, scaffoldFile), sentinel, 'utf8');
+    }
 
     const result = await initWren(root, packageRoot);
 
-    assert.equal((await readFile(path.join(root, 'AGENTS.md'), 'utf8')), 'custom instructions');
-    assert.ok(result.skipped.includes('AGENTS.md'));
+    assert.deepEqual(result.created, []);
+    assert.deepEqual(result.skipped.sort(), [...SCAFFOLD_FILES].sort());
+    assert.equal(result.configuredSources, undefined);
+
+    for (const [scaffoldFile, sentinel] of sentinels) {
+      assert.equal(await readFile(path.join(root, scaffoldFile), 'utf8'), sentinel);
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }
