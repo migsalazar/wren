@@ -45,7 +45,7 @@ test('runDoctor passes initialized vault with recap and search index warnings', 
     assert.ok(report.checks.some((check) => check.message === 'recap directory missing: recap'));
     assert.ok(report.checks.some((check) => check.message === 'source configured: recap -> atlas/general'));
     assert.ok(report.checks.some((check) => check.message === 'BM25 recall enabled'));
-    assert.ok(report.checks.some((check) => check.message === 'search index missing: .wren/cache/search-index.json'));
+    assert.ok(report.checks.some((check) => check.message === 'search index missing: .wren/cache/search-index.json (run: wren index)'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -129,7 +129,7 @@ test('runDoctor warns when search index is stale', async () => {
 
     assert.equal(report.errors, 0);
     assert.equal(report.warnings, 1);
-    assert.ok(report.checks.some((check) => check.message === 'search index stale: new Markdown file: recap/new.md'));
+    assert.ok(report.checks.some((check) => check.message === 'search index stale: new Markdown file: recap/new.md (run: wren index)'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
