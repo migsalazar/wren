@@ -61,11 +61,16 @@ export async function runDoctor(rootDir: string): Promise<DoctorReport> {
   return summarize(checks);
 }
 
-export function formatDoctorReport(report: DoctorReport): string {
+export interface DoctorFormatOptions {
+  color?: boolean;
+}
+
+export function formatDoctorReport(report: DoctorReport, options: DoctorFormatOptions = {}): string {
+  const useColor = options.color ?? shouldUseColor();
   const lines = ['Wren doctor', ''];
 
   for (const check of report.checks) {
-    lines.push(`${statusSymbol(check.status)} ${check.message}`);
+    lines.push(formatStatusLine(check, useColor));
   }
 
   lines.push('');
@@ -202,10 +207,26 @@ function error(message: string): DoctorCheck {
   return { status: 'error', message };
 }
 
+function formatStatusLine(check: DoctorCheck, useColor: boolean): string {
+  const line = `${statusSymbol(check.status)} ${check.message}`;
+  if (!useColor) return line;
+  if (check.status === 'warn') return colorize(line, 33);
+  if (check.status === 'error') return colorize(line, 31);
+  return line;
+}
+
 function statusSymbol(status: DoctorStatus): string {
   if (status === 'ok') return '✓';
   if (status === 'warn') return '!';
   return '✗';
+}
+
+function colorize(value: string, colorCode: number): string {
+  return `\u001b[${colorCode}m${value}\u001b[0m`;
+}
+
+function shouldUseColor(): boolean {
+  return Boolean(process.stdout.isTTY) && process.env.NO_COLOR === undefined;
 }
 
 function plural(count: number): string {
