@@ -18,6 +18,12 @@ Deterministic helpers such as `wren init`, `wren lint`, `wren doctor`, `wren ind
 - Treat ordinary conversational uses of “recap”, “recall”, “reflect”, or “lint” as normal requests, not Wren workflow requests.
 - If a workflow file is missing, say the scaffold is incomplete and suggest `wren init`.
 
+## Discussion
+
+- For ideas, note structure, workflows, or tradeoffs, reason through options before acting.
+- Ask focused clarifying questions when useful; do not let discussion delay straightforward requests or explicit Wren commands.
+- Surface tradeoffs and challenge assumptions constructively within Wren's evidence and boundary rules.
+
 ## Boundaries
 
 - Configured Wren areas and source folders live in `.wren/config.json`.
